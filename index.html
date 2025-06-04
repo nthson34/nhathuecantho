@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHÀ THUÊ CẦN THƠ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter from Google Fonts (changed from Montserrat) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons (e.g., search, heart) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Changed font to Inter */
+            background-color: #f0f2f5; /* Màu nền nhẹ nhàng */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Basic modal styling for the overlay */
+        .modal {
+            display: flex; /* Always flex for centering, but control visibility with opacity */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            align-items: center;
+            justify-content: center;
+            opacity: 0; /* Start hidden */
+            pointer-events: none; /* Disable interaction when hidden */
+            transition: opacity 0.3s ease-in-out; /* Add transition */
+        }
+        .modal.active { /* Use 'active' class for showing */
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* General modal content styling (for edit, message, and linked content modals) */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd; /* Lighter border */
+            width: 90%; /* Responsive width */
+            max-width: 500px; /* Max width for larger screens */
+            border-radius: 12px; /* More rounded */
+            position: relative;
+            max-height: 90vh; /* Max height for scrolling */
+            overflow-y: auto; /* Enable vertical scrolling */
+            transform: scale(0.95); /* Start slightly smaller for animation */
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Smooth transition */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); /* Stronger shadow */
+        }
+
+        /* Apply animation to all modals when active */
+        .modal.active .modal-content {
+            transform: scale(1); /* Scale to normal size when active */
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /* Hide pages by default */
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+
+        /* Custom button styles for a more professional look */
+        .btn-primary {
+            background-color: #3b82f6; /* Blue-600 */
+            color: white;
+            padding: 0.75rem 1.25rem; /* py-3 px-5 */
+            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 600; /* font-semibold */
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* Blue-700 */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb; /* Gray-200 */
+            color: #374151; /* Gray-800 */
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db; /* Gray-300 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background-color: #10b981; /* Green-600 */
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-success:hover {
+            background-color: #059669; /* Green-700 */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-purple {
+            background-color: #9333ea; /* Purple-600 */
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-purple:hover {
+            background-color: #7e22ce; /* Purple-700 */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            color: #d97706; /* Yellow-600 */
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-warning:hover {
+            color: #b45309; /* Yellow-700 */
+            transform: scale(1.1);
+        }
+
+        .btn-danger {
+            color: #ef4444; /* Red-600 */
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-danger:hover {
+            color: #dc2626; /* Red-700 */
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Header Section - Redesigned for a more professional and responsive look -->
+    <header class="bg-white shadow-lg border-b border-gray-200">
+        <!-- Top Header Bar -->
+        <div class="bg-gray-100 py-2 px-4 text-sm text-gray-600 border-b border-gray-200">
+            <div class="container mx-auto flex flex-col md:flex-row justify-end md:items-center space-y-1 md:space-y-0 md:space-x-4">
+                <p class="text-center md:text-right">Hotline: <a href="tel:0901026345" class="hover:text-blue-600 transition-colors duration-300 font-semibold">0901.026.345</a></p>
+                <!-- Removed "Liên Hệ" link -->
+                <!-- Admin Nav Links (will be shown/hidden by JS) -->
+                <ul id="admin-nav-links" class="flex flex-row justify-center space-x-4 md:space-x-8 text-center md:text-left hidden">
+                    <li><a href="#" id="nav-home" class="block text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium text-base md:text-lg">Trang Chủ</a></li>
+                    <li><a href="#" id="nav-post-new" class="block text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium text-base md:text-lg">Đăng tin</a></li>
+                </ul>
+            </div>
+        </div>
+        <!-- Main Header Bar -->
+        <div class="container mx-auto py-4 px-4 flex flex-col md:flex-row md:justify-between md:items-center">
+            <!-- Title/Logo -->
+            <div class="flex-shrink-0 mb-4 md:mb-0">
+                <!-- Adjusted font size for mobile (text-2xl) and desktop (md:text-3xl) -->
+                <h1 class="text-2xl md:text-3xl font-extrabold text-blue-700 text-center md:text-left">NHÀ THUÊ CẦN THƠ</h1>
+            </div>
+            <!-- Search bar - positioned closer to title -->
+            <div class="relative w-full max-w-full md:max-w-xs ml-auto md:ml-0"> <!-- Added ml-auto to push it right on mobile if needed, max-w-xs for smaller desktop -->
+                <input type="text" id="header-search-keyword" placeholder="Tìm kiếm nhanh..."
+                       class="w-full p-2 pl-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-sm shadow-sm"> <!-- Smaller padding and text -->
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i> <!-- Smaller icon -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Section -->
+    <main class="flex-grow container mx-auto p-4 py-8">
+        <!-- User ID Display (Hidden as per user request) -->
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-lg shadow-sm hidden" role="alert">
+            <p class="font-bold">ID Người dùng của bạn:</p>
+            <p id="user-id-display" class="break-all text-sm"></p>
+            <p class="text-xs mt-2">Sử dụng ID này để xem và quản lý các bài đăng của bạn.</p>
+        </div>
+
+        <!-- Home Page Content -->
+        <div id="home-page" class="page-content active">
+            <!-- Removed the main search and filter section -->
+            <!-- Property Listings Section - Enhanced for Chotot style -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="property-listings">
+                <!-- Properties will be loaded here by JavaScript -->
+                <p class="text-center text-gray-600 text-lg col-span-full" id="loading-message">Đang tải tin đăng...</p>
+            </section>
+        </div>
+
+        <!-- Post New Page Content (hidden by default, shown only for admin) -->
+        <div id="post-new-page" class="page-content hidden">
+            <section class="bg-white p-6 rounded-xl shadow-xl border border-gray-100">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Điền thông tin tin đăng</h2>
+                <form id="new-property-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="new-title" class="block text-gray-700 text-sm font-bold mb-2">Tiêu đề:</label>
+                        <input type="text" id="new-title" required
+                               class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    </div>
+                    <div>
+                        <label for="new-price" class="block text-gray-700 text-sm font-bold mb-2">Giá:</label>
+                        <input type="text" id="new-price" required
+                               class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    </div>
+                    <div>
+                        <label for="new-district" class="block text-gray-700 text-sm font-bold mb-2">Quận/Huyện:</label>
+                        <select id="new-district" required
+                                class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                            <option value="">Chọn Quận/Huyện</option>
+                            <option value="Ninh Kiều">Ninh Kiều</option>
+                            <option value="Bình Thủy">Bình Thủy</option>
+                            <option value="Cái Răng">Cái Răng</option>
+                            <option value="Ô Môn">Ô Môn</option>
+                            <option value="Thốt Nốt">Thốt Nốt</option>
+                            <option value="Phong Điền">Phong Điền</option>
+                            <option value="Cờ Đỏ">Cờ Đỏ</option>
+                            <option value="Thới Lai">Thới Lai</option>
+                            <option value="Vĩnh Thạnh">Vĩnh Thạnh</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="new-type" class="block text-gray-700 text-sm font-bold mb-2">Loại hình:</label>
+                        <select id="new-type" required
+                                class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                            <option value="">Chọn Loại hình</option>
+                            <option value="Phòng trọ">Phòng trọ</option>
+                            <option value="Nhà nguyên căn">Nhà nguyên căn</option>
+                            <option value="Căn hộ">Căn hộ</option>
+                            <option value="Mặt bằng">Mặt bằng</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="new-area" class="block text-gray-700 text-sm font-bold mb-2">Diện tích (m²):</label>
+                        <input type="text" id="new-area"
+                               class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    </div>
+                    <div>
+                        <label for="new-details" class="block text-gray-700 text-sm font-bold mb-2">Chi tiết (URL ảnh/video trực tiếp):</label>
+                        <input type="url" id="new-details" placeholder="https://example.com/image.jpg hoặc https://example.com/video.mp4"
+                               class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        <p class="text-xs text-gray-500 mt-1">Vui lòng nhập liên kết trực tiếp đến ảnh hoặc video. Liên kết thư mục (ví dụ: Google Drive) có thể không hoạt động.</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="new-description" class="block text-gray-700 text-sm font-bold mb-2">Mô tả:</label>
+                        <textarea id="new-description" rows="4"
+                                  class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="new-deposit" class="block text-gray-700 text-sm font-bold mb-2">Tiền cọc:</label>
+                        <input type="text" id="new-deposit"
+                               class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit"
+                                class="btn-success w-full flex items-center justify-center">
+                            Đăng tin
+                        </button>
+                    </div>
+                </form>
+                <div id="form-message" class="mt-4 text-center text-sm"></div>
+
+                <!-- Sync Button for Admin -->
+                <div class="mt-8 text-center" id="admin-sync-section" style="display: none;">
+                    <button id="sync-google-sheet-button"
+                            class="btn-purple flex items-center justify-center">
+                        <i class="fas fa-sync-alt mr-2"></i>Đồng bộ dữ liệu từ Google Sheet
+                    </button>
+                    <p id="sync-message" class="mt-2 text-sm text-gray-600"></p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-800 text-white p-6 mt-8">
+        <div class="container mx-auto text-center">
+            <p>&copy; 2025 NHÀ THUÊ CẦN THƠ. Tất cả bản quyền được bảo lưu.</p>
+            <p class="mt-2">
+                <a href="#" class="hover:text-blue-400 transition-colors duration-300">Chính sách bảo mật</a> |
+                <a href="#" class="hover:text-blue-400 transition-colors duration-300">Điều khoản sử dụng</a>
+            </p>
+            <!-- Updated contact line: made phone number clickable -->
+            <p class="mt-2">Liên hệ: <a href="tel:0901026345" class="hover:text-blue-400 transition-colors duration-300">0901.026.345</a></p>
+        </div>
+    </footer>
+
+    <!-- Modal Structure for Property Details -->
+    <div id="property-modal" class="modal">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full mx-4 relative max-h-[90vh] overflow-y-auto modal-content">
+            <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-3"></h3>
+            <p id="modal-price" class="text-blue-600 font-semibold text-xl mb-2"></p>
+            <p id="modal-basic-details" class="text-gray-600 text-base mb-4"></p> <!-- Basic details like district, type, area -->
+            <div id="modal-details-link-container" class="mt-4 mb-4">
+                <!-- Details link will be inserted here -->
+            </div>
+            <p id="modal-description" class="text-gray-700 text-base leading-relaxed whitespace-pre-wrap"></p>
+            <p id="modal-deposit" class="text-gray-700 text-base mb-2"></p>
+            <div class="flex justify-end mt-6">
+                <button id="modal-close-button-bottom" class="btn-secondary">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Property Modal -->
+    <div id="edit-property-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-edit-modal">&times;</span>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">Chỉnh sửa tin đăng</h3>
+            <form id="edit-property-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="edit-title" class="block text-gray-700 text-sm font-bold mb-2">Tiêu đề:</label>
+                    <input type="text" id="edit-title" required
+                           class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                </div>
+                <div>
+                    <label for="edit-price" class="block text-gray-700 text-sm font-bold mb-2">Giá:</label>
+                    <input type="text" id="edit-price" required
+                           class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                </div>
+                <div>
+                    <label for="edit-district" class="block text-gray-700 text-sm font-bold mb-2">Quận/Huyện:</label>
+                    <select id="edit-district" required
+                            class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        <option value="">Chọn Quận/Huyện</option>
+                        <option value="Ninh Kiều">Ninh Kiều</option>
+                        <option value="Bình Thủy">Bình Thủy</option>
+                        <option value="Cái Răng">Cái Răng</option>
+                        <option value="Ô Môn">Ô Môn</option>
+                        <option value="Thốt Nốt">Thốt Nốt</option>
+                        <option value="Phong Điền">Phong Điền</option>
+                        <option value="Cờ Đỏ">Cờ Đỏ</option>
+                        <option value="Thới Lai">Thới Lai</option>
+                        <option value="Vĩnh Thạnh">Vĩnh Thạnh</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-type" class="block text-gray-700 text-sm font-bold mb-2">Loại hình:</label>
+                    <select id="edit-type" required
+                            class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        <option value="">Chọn Loại hình</option>
+                        <option value="Phòng trọ">Phòng trọ</option>
+                        <option value="Nhà nguyên căn">Nhà nguyên căn</option>
+                        <option value="Căn hộ">Căn hộ</option>
+                        <option value="Mặt bằng">Mặt bằng</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-area" class="block text-gray-700 text-sm font-bold mb-2">Diện tích (m²):</label>
+                    <input type="text" id="edit-area"
+                           class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                </div>
+                <div>
+                    <label for="edit-details" class="block text-gray-700 text-sm font-bold mb-2">Chi tiết (URL ảnh/video trực tiếp):</label>
+                    <input type="url" id="edit-details" placeholder="https://example.com/image.jpg hoặc https://example.com/video.mp4"
+                           class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        <p class="text-xs text-gray-500 mt-1">Vui lòng nhập liên kết trực tiếp đến ảnh hoặc video. Liên kết thư mục (ví dụ: Google Drive) có thể không hoạt động.</p>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="edit-description" class="block text-gray-700 text-sm font-bold mb-2">Mô tả:</label>
+                    <textarea id="edit-description" rows="4"
+                              class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="edit-deposit" class="block text-gray-700 text-sm font-bold mb-2">Tiền cọc:</label>
+                    <input type="text" id="edit-deposit"
+                           class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                </div>
+                <div class="md:col-span-2">
+                    <button type="submit" id="save-edit-button"
+                            class="btn-primary w-full flex items-center justify-center">
+                        Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+            <div id="edit-form-message" class="mt-4 text-center text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Message Box for Alerts -->
+    <div id="message-box" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-message-box">&times;</span>
+            <h3 id="message-box-title" class="text-xl font-bold mb-2"></h3>
+            <p id="message-box-body"></p>
+            <div class="flex justify-end mt-4">
+                <button id="message-box-ok" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, doc, deleteDoc, updateDoc, setDoc, getDocs, where, limit, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase configuration and initialization
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        let unsubscribeFirestore = null; // To manage Firestore real-time listener
+
+        let allProperties = []; // To store properties fetched from Firestore
+        let currentEditingPropertyId = null; // To store the ID of the property being edited
+        
+        // Define the admin user ID here. Replace 'YOUR_ADMIN_USER_ID_HERE' with the actual user ID you want to designate as admin.
+        // You can find your user ID in the browser's developer console after the app loads and authenticates.
+        const ADMIN_USER_ID = '14847074405510090096'; // Example: '14847074405510090096' from your debug log
+
+        // Function to show custom message box
+        function showMessageBox(title, message) {
+            document.getElementById('message-box-title').textContent = title;
+            document.getElementById('message-box-body').textContent = message;
+            document.getElementById('message-box').classList.add('active'); // Use active class
+        }
+
+        // Function to show/hide pages
+        function showPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            // When navigating to home page, ensure data is rendered from Firestore
+            if (pageId === 'home-page' && isAuthReady) {
+                // The onSnapshot listener will handle rendering, so no explicit call here
+            }
+        }
+
+        // Function to format currency
+        function formatCurrency(amount) {
+            if (typeof amount !== 'string') {
+                amount = String(amount);
+            }
+
+            let originalAmountString = amount.toLowerCase().trim();
+            let numericValue;
+
+            // First, remove 'đ' suffix, 'tr' suffix, and any spaces
+            let cleanedAmount = originalAmountString.replace(/đ|tr/g, '').trim();
+
+            // Replace comma decimal separator with dot decimal separator
+            cleanedAmount = cleanedAmount.replace(/,/g, '.');
+
+            // Remove thousands separators (dots) before parsing as a number.
+            // This regex ensures we only remove dots that are thousands separators, not decimal points.
+            // It replaces a dot if it's followed by exactly three digits and then optionally more digits or end of string.
+            let finalNumericString = cleanedAmount.replace(/\.(?=\d{3}(?:\.|$))/g, ''); 
+            
+            numericValue = parseFloat(finalNumericString);
+
+            if (isNaN(numericValue)) {
+                return 'Giá liên hệ';
+            }
+
+            // Heuristic: If the original string implied millions (contains 'tr' or 'đ')
+            // AND the parsed numeric value is less than a certain threshold (e.g., 1,000,000)
+            // then multiply by 1,000,000.
+            // This prevents multiplying already large numbers (e.g., "1000000đ") by another million.
+            const isMillionImpliedInOriginal = originalAmountString.includes('tr') || originalAmountString.includes('đ');
+            const isSmallNumber = numericValue < 1000000; // Threshold to consider it a "small" number that needs multiplying
+
+            if (isMillionImpliedInOriginal && isSmallNumber) {
+                numericValue *= 1000000;
+            }
+
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(numericValue);
+        }
+
+        // Function to sync Google Sheet data into Firestore
+        async function syncGoogleSheetData() {
+            console.log("DEBUG: Đang tiến hành đồng bộ dữ liệu từ Google Sheet vào Firestore...");
+            const syncMessageElement = document.getElementById('sync-message');
+            syncMessageElement.textContent = 'Đang đồng bộ... Vui lòng chờ.';
+            syncMessageElement.className = 'mt-2 text-sm text-blue-600';
+
+            const googleSheetCsvUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vQqaOLdvzyAPxme8BxT2OvnCU84KjXdM6oruAAQt_-ZIjiqdmGZ7mTfhxAQ7zU4yKvUdb6IBb15G3lq/pub?gid=61368668&single=true&output=csv`;
+            const propertiesCollectionRef = collection(db, `artifacts/${appId}/public/data/properties`);
+
+            try {
+                // 1. Fetch all existing google-sheet-imported documents from Firestore
+                const existingImportedQuery = query(propertiesCollectionRef, where("source", "==", "google-sheet-imported"));
+                const existingImportedSnapshot = await getDocs(existingImportedQuery);
+                const firestoreImportedProps = {}; // { gs_hash: { id: 'firestore_doc_id', data: {...} } }
+                existingImportedSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.gs_hash) {
+                        firestoreImportedProps[data.gs_hash] = { id: doc.id, data: data };
+                    }
+                });
+                console.log(`DEBUG: Đã tìm thấy ${Object.keys(firestoreImportedProps).length} tin đăng đã nhập trong Firestore.`);
+
+                // 2. Fetch the latest 20 rows from the Google Sheet
+                const response = await fetch(googleSheetCsvUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                
+                const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
+                if (rows.length < 1) {
+                    console.log("DEBUG: Không có dữ liệu trong Google Sheet để nhập.");
+                    syncMessageElement.textContent = 'Không có dữ liệu trong Google Sheet để đồng bộ.';
+                    syncMessageElement.className = 'mt-2 text-sm text-yellow-600';
+                    return;
+                }
+
+                const headers = rows[0].split(',').map(header => header.trim()).filter(header => header !== '');
+                let dataRows = rows.slice(1);
+                dataRows = dataRows.slice(Math.max(0, dataRows.length - 20)); // Get only last 20 rows
+
+                const currentGoogleSheetHashes = {}; // { gs_hash: true }
+                const batch = writeBatch(db); // Use Firestore batch writes for efficiency
+
+                for (const [idx, row] of dataRows.entries()) { // Changed index to idx to avoid conflict with `index` in `headers.forEach`
+                    const values = [];
+                    let inQuote = false;
+                    let currentField = '';
+                    for (let i = 0; i < row.length; i++) {
+                        const char = row[i];
+                        if (char === '"') {
+                            inQuote = !inQuote;
+                            if (inQuote && row[i + 1] === '"') {
+                                currentField += '"';
+                                i++; 
+                            }
+                        } else if (char === ',' && !inQuote) {
+                            values.push(currentField.trim());
+                            currentField = '';
+                        } else {
+                            currentField += char;
+                        }
+                    }
+                    values.push(currentField.trim());
+
+                    let propertyData = {
+                        title: '',
+                        price: '',
+                        details: '',
+                        deposit: '',
+                        district: '',
+                        type: '',
+                        area: '',
+                        description: ''
+                    };
+
+                    // Explicitly map columns based on user's request (0-indexed)
+                    // Column D (index 3) for Title
+                    propertyData.title = values[3] || '';
+                    // Column G (index 6) for Price
+                    propertyData.price = values[6] || '';
+                    // Column F (index 5) for Details (Link ảnh)
+                    propertyData.details = values[5] || '';
+                    // Column H (index 7) for Deposit (Tiền cọc) - KEEP AS IS
+                    propertyData.deposit = values[7] || '';
+
+                    // Other fields from Google Sheet (assuming their column index is consistent)
+                    headers.forEach((header, i) => {
+                        if (header === 'Quận/Huyện' && values[i] !== undefined) propertyData.district = values[i];
+                        if (header === 'Loại hình' && values[i] !== undefined) propertyData.type = values[i];
+                        if (header === 'Diện tích' && values[i] !== undefined) propertyData.area = values[i];
+                        if (header === 'Mô tả' && values[i] !== undefined) propertyData.description = values[i];
+                    });
+
+                    // Generate a stable hash for the Google Sheet row content
+                    const gs_hash = btoa(encodeURIComponent(JSON.stringify({
+                        title: propertyData.title || '',
+                        price: propertyData.price || '',
+                        details: propertyData.details || '',
+                        deposit: propertyData.deposit || '',
+                        district: propertyData.district || '',
+                        type: propertyData.type || '',
+                        area: propertyData.area || '',
+                        description: propertyData.description || ''
+                    })));
+                    currentGoogleSheetHashes[gs_hash] = true; // Mark this hash as present in current GS data
+
+                    if (firestoreImportedProps[gs_hash]) {
+                        // Document with this hash exists in Firestore, update it
+                        const docRef = doc(propertiesCollectionRef, firestoreImportedProps[gs_hash].id);
+                        batch.update(docRef, {
+                            title: propertyData.title,
+                            price: propertyData.price,
+                            details: propertyData.details,
+                            deposit: propertyData.deposit,
+                            district: propertyData.district,
+                            type: propertyData.type,
+                            area: propertyData.area,
+                            description: propertyData.description,
+                            // Keep existing source, gs_hash, timestamp, userId as they are metadata
+                        });
+                        delete firestoreImportedProps[gs_hash]; // Remove from map as it's processed
+                        console.log(`DEBUG: Đã cập nhật tin đăng từ Google Sheet: ${docRef.id}`);
+                    } else {
+                        // Document with this hash does not exist, add it
+                        const newDocRef = doc(propertiesCollectionRef); // Let Firestore generate ID
+                        batch.set(newDocRef, {
+                            ...propertyData,
+                            source: 'google-sheet-imported',
+                            gs_hash: gs_hash,
+                            timestamp: new Date(),
+                            userId: 'google-sheet-importer'
+                        });
+                        console.log(`DEBUG: Đã thêm tin đăng mới từ Google Sheet: ${newDocRef.id}`);
+                    }
+                }
+
+                // As per user's request, do NOT delete documents from Firestore that are no longer in the latest 20 Google Sheet rows.
+                // All previously imported Google Sheet data will be retained in Firestore.
+
+                await batch.commit(); // Commit all batch operations
+                console.log("DEBUG: Hoàn tất quá trình đồng bộ dữ liệu từ Google Sheet vào Firestore.");
+                syncMessageElement.textContent = 'Đồng bộ thành công!';
+                syncMessageElement.className = 'mt-2 text-sm text-green-600';
+
+            } catch (error) {
+                console.error("Lỗi khi đồng bộ dữ liệu từ Google Sheet vào Firestore:", error);
+                syncMessageElement.textContent = 'Lỗi đồng bộ dữ liệu. Vui lòng thử lại.';
+                syncMessageElement.className = 'mt-2 text-sm text-red-600';
+                showMessageBox("Lỗi đồng bộ dữ liệu", "Không thể đồng bộ tin đăng từ Google Sheet. Vui lòng kiểm tra kết nối hoặc quyền truy cập.");
+            }
+        }
+
+
+        // Initialize Firebase and authenticate
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Listen for auth state changes
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("DEBUG: Người dùng đã xác thực với ID:", userId);
+                        isAuthReady = true;
+
+                        // Show admin sync section if user is admin
+                        if (userId === ADMIN_USER_ID) {
+                            document.getElementById('admin-sync-section').style.display = 'block';
+                            document.getElementById('admin-nav-links').classList.remove('hidden'); // Show admin nav links
+                            document.getElementById('post-new-page').classList.remove('hidden'); // Ensure post page is not hidden by default
+                        } else {
+                            document.getElementById('admin-sync-section').style.display = 'none';
+                            document.getElementById('admin-nav-links').classList.add('hidden'); // Hide admin nav links
+                            document.getElementById('post-new-page').classList.add('hidden'); // Hide post page
+                        }
+
+                        // Check if Google Sheet data has already been imported
+                        // Query for any document with source 'google-sheet-imported'
+                        const importedCheckQuery = query(collection(db, `artifacts/${appId}/public/data/properties`), 
+                                                         where("source", "==", "google-sheet-imported"), 
+                                                         limit(1));
+                        const importedSnapshot = await getDocs(importedCheckQuery);
+
+                        if (importedSnapshot.empty) {
+                            // If no imported documents found, proceed with initial sync
+                            await syncGoogleSheetData();
+                        } else {
+                            console.log("DEBUG: Dữ liệu Google Sheet đã được nhập vào Firestore, bỏ qua quá trình nhập ban đầu.");
+                        }
+
+                        // Set up Firestore real-time listener for all public properties
+                        if (unsubscribeFirestore) {
+                            unsubscribeFirestore(); // Unsubscribe previous listener if any
+                        }
+                        const q = query(collection(db, `artifacts/${appId}/public/data/properties`));
+                        unsubscribeFirestore = onSnapshot(q, (snapshot) => {
+                            // This listener will trigger whenever there's a change in Firestore
+                            // and will re-render all data (including newly imported GS data)
+                            renderAllPropertiesFromFirestore(snapshot);
+                        }, (error) => {
+                            console.error("Lỗi khi lắng nghe Firestore:", error);
+                            showMessageBox("Lỗi Firestore", "Không thể cập nhật tin đăng theo thời gian thực.");
+                        });
+
+                    } else {
+                        console.log("DEBUG: Người dùng chưa xác thực. Đang cố gắng đăng nhập ẩn danh...");
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Lỗi khởi tạo Firebase hoặc xác thực:", error);
+                showMessageBox("Lỗi", "Không thể khởi tạo dịch vụ. Vui lòng thử lại sau.");
+            }
+        }
+
+        // Function to render all properties from Firestore snapshot
+        function renderAllPropertiesFromFirestore(snapshot) {
+            const loadingMessageElement = document.getElementById('loading-message');
+            if (loadingMessageElement) {
+                loadingMessageElement.textContent = "Đang tải tin đăng...";
+                loadingMessageElement.classList.remove('hidden');
+            }
+
+            allProperties = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                timestamp: doc.data().timestamp ? doc.data().timestamp.toDate() : new Date(0) // Convert Firestore Timestamp to Date object
+            }));
+
+            // Sort by timestamp (newest first)
+            allProperties.sort((a, b) => {
+                const timeA = a.timestamp ? a.timestamp.getTime() : 0;
+                const timeB = b.timestamp ? b.timestamp.getTime() : 0;
+                return timeB - timeA; // Newest first
+            });
+
+            console.log("DEBUG: Dữ liệu Firestore đã tải và render:", allProperties);
+            renderProperties(allProperties); // Call the existing render function
+            if (loadingMessageElement) {
+                loadingMessageElement.classList.add('hidden');
+            }
+        }
+
+        // Function to validate if a string is a URL
+        function isValidHttpUrl(string) {
+            let url;
+            try {
+                url = new URL(string);
+            } catch (_) {
+                return false;  
+            }
+            return url.protocol === "http:" || url.protocol === "https:";
+        }
+
+        // Function to render properties
+        function renderProperties(propertiesToRender) {
+            const listingsContainer = document.getElementById('property-listings');
+            listingsContainer.innerHTML = ''; // Clear existing listings
+            console.log("DEBUG: Đang render các tin đăng. Số lượng tin đăng:", propertiesToRender.length);
+
+            if (propertiesToRender.length === 0) {
+                listingsContainer.innerHTML = '<p class="text-center text-gray-600 text-lg col-span-full">Không tìm thấy bất động sản nào phù hợp.</p>';
+                console.log("DEBUG: Không tìm thấy bất động sản nào phù hợp để hiển thị.");
+                return;
+            }
+
+            propertiesToRender.forEach((property) => {
+                // Use the mapped property fields
+                const title = property.title || 'Không có tiêu đề';
+                const price = formatCurrency(property.price);
+                const district = property.district || 'N/A';
+                const type = property.type || 'N/A';
+                const area = property.area || 'N/A';
+                const description = property.description || 'Không có mô tả.';
+                // Deposit is now displayed as raw string from Google Sheet
+                const deposit = property.deposit || 'Không có thông tin cọc'; 
+                // All posts are now from Firestore, so no need for property.source check for display logic
+                const isImportedFromGoogleSheet = property.source === 'google-sheet-imported';
+
+                const propertyCard = `
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl group border border-gray-100 cursor-pointer property-card-clickable" data-property-id="${property.id}">
+                        <div class="p-5">
+                            <!-- Highlighted title with bottom border and increased margin -->
+                            <h3 class="text-xl font-extrabold text-indigo-700 pb-2 border-b-2 border-indigo-500 mb-4 line-clamp-2">${title}</h3>
+                            <p class="text-blue-600 font-bold text-xl mb-3">${price}</p>
+                            <p class="text-gray-700 text-base mb-2 flex items-center">
+                                <!-- Eye-catching colored icons -->
+                                <i class="fas fa-map-marker-alt mr-2 text-red-500 text-lg"></i><span class="font-medium">${district}</span>
+                            </p>
+                            <p class="text-gray-700 text-base mb-2 flex items-center">
+                                <i class="fas fa-building mr-2 text-green-500 text-lg"></i><span class="font-medium">${type}</span>
+                            </p>
+                            <p class="text-gray-700 text-base mb-3 flex items-center">
+                                <i class="fas fa-ruler-combined mr-2 text-yellow-500 text-lg"></i><span class="font-medium">${area}m²</span>
+                            </p>
+                            <p class="text-gray-700 text-base mb-4">Tiền cọc: <span class="font-medium">${deposit}</span></p>
+                            <p class="text-gray-700 text-sm line-clamp-3 mb-5">
+                                ${description}
+                            </p>
+                            <div class="flex justify-between items-center text-xs text-gray-500">
+                                <span class="text-sm font-medium">Đăng bởi: ${isImportedFromGoogleSheet ? 'Google Sheet (Đã nhập)' : (property.userId ? property.userId.substring(0, 8) + '...' : 'Ứng dụng')}</span>
+                                <div class="flex space-x-3">
+                                    <!-- Edit/Delete buttons are only shown for admin ID -->
+                                    ${userId === ADMIN_USER_ID ? `
+                                    <button class="btn-warning text-xl edit-property-button" data-property-id="${property.id}" title="Chỉnh sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-danger text-xl delete-property-button" data-property-id="${property.id}" title="Xóa">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listingsContainer.innerHTML += propertyCard;
+            });
+        }
+
+        // Search functionality
+        // Removed the event listener for the main search button as the section is removed.
+        // document.getElementById('search-button').addEventListener('click', () => {
+        //     const keyword = document.getElementById('search-keyword').value.toLowerCase();
+        //     const district = document.getElementById('search-district').value;
+        //     const type = document.getElementById('search-type').value;
+
+        //     // Filter from the 'allProperties' array (combined data from Firestore)
+        //     const filtered = allProperties.filter(property => {
+        //         const matchesKeyword = (property.title && property.title.toLowerCase().includes(keyword)) ||
+        //                                (property.description && property.description.toLowerCase().includes(keyword));
+        //         const matchesDistrict = district === "" || (property.district && property.district.toLowerCase() === district.toLowerCase());
+        //         const matchesType = type === "" || (property.type && property.type.toLowerCase() === type.toLowerCase());
+        //         return matchesKeyword && matchesDistrict && matchesType;
+        //     });
+        //     renderProperties(filtered);
+        // });
+
+        // Add event listener for header search input
+        document.getElementById('header-search-keyword').addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                const keyword = document.getElementById('header-search-keyword').value.toLowerCase();
+                const filtered = allProperties.filter(property => {
+                    const matchesKeyword = (property.title && property.title.toLowerCase().includes(keyword)) ||
+                                           (property.description && property.description.toLowerCase().includes(keyword));
+                    return matchesKeyword;
+                });
+                renderProperties(filtered);
+            }
+        });
+
+        // Event delegation for property listings (view, edit, delete buttons)
+        document.getElementById('property-listings').addEventListener('click', async (event) => {
+            // Check if a property card itself was clicked
+            const clickedCard = event.target.closest('.property-card-clickable');
+            if (clickedCard) {
+                const propertyId = clickedCard.dataset.propertyId;
+                const property = allProperties.find(p => p.id === propertyId); 
+                const modalDetailsLinkContainer = document.getElementById('modal-details-link-container');
+                modalDetailsLinkContainer.innerHTML = ''; // Clear previous content
+
+                if (property) {
+                    document.getElementById('modal-title').textContent = property.title || 'Không có tiêu đề';
+                    document.getElementById('modal-price').textContent = formatCurrency(property.price);
+                    document.getElementById('modal-basic-details').textContent = `Quận: ${property.district || 'N/A'} | Loại: ${property.type || 'N/A'} | Diện tích: ${property.area || 'N/A'}m²`;
+                    
+                    if (isValidHttpUrl(property.details)) {
+                        // Added target="_blank" to open in a new tab
+                        modalDetailsLinkContainer.innerHTML = `<p class="text-gray-700 text-base font-semibold mb-2"><a href="${property.details}" target="_blank" class="text-blue-500 hover:underline"><i class="fas fa-external-link-alt mr-2"></i>Xem thêm hình ảnh/video</a></p>`;
+                    } else if (property.details) {
+                        modalDetailsLinkContainer.innerHTML = `<p class="text-gray-700 text-base">Chi tiết: ${property.details}</p>`;
+                    } else {
+                        modalDetailsLinkContainer.innerHTML = `<p class="text-gray-700 text-base">Không có chi tiết.</p>`;
+                    }
+                    document.getElementById('modal-description').textContent = property.description || 'Không có mô tả.';
+                    // Display deposit as raw string
+                    document.getElementById('modal-deposit').textContent = `Tiền cọc: ${property.deposit || 'Không có thông tin cọc'}`;
+
+                    document.getElementById('property-modal').classList.add('active');
+                }
+            }
+
+            // Delete Property Button (only visible for admin)
+            if (event.target.closest('.delete-property-button')) {
+                const button = event.target.closest('.delete-property-button');
+                const propertyId = button.dataset.propertyId;
+                if (!propertyId) return;
+
+                // Stop propagation to prevent the card click from triggering the modal
+                event.stopPropagation(); 
+
+                if (userId !== ADMIN_USER_ID) {
+                    showMessageBox("Lỗi", "Bạn không có quyền xóa tin đăng này.");
+                    return;
+                }
+
+                showMessageBox("Xác nhận xóa", "Bạn có chắc chắn muốn xóa tin đăng này không?");
+                document.getElementById('message-box-ok').onclick = async () => {
+                    document.getElementById('message-box').classList.remove('active'); // Hide message box
+
+                    try {
+                        // Delete from the public collection
+                        await deleteDoc(doc(db, `artifacts/${appId}/public/data/properties`, propertyId));
+                        // Also attempt to delete from the user's private collection, in case it was a private post
+                        // This assumes the private collection uses the same doc ID as public for the same post
+                        // We need to check if the post was originally created by the current user (not imported)
+                        const propertyToDelete = allProperties.find(p => p.id === propertyId);
+                        if (propertyToDelete && propertyToDelete.userId === userId && propertyToDelete.source !== 'google-sheet-imported') { 
+                            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/properties`, propertyId));
+                        }
+                        console.log("DEBUG: Tài liệu đã được xóa với ID:", propertyId);
+                        showMessageBox("Thành công", "Tin đăng đã được xóa.");
+                        // Firestore listener will automatically re-render
+                    } catch (e) {
+                        console.error("Lỗi khi xóa tài liệu:", e);
+                        showMessageBox("Lỗi", "Không thể xóa tin đăng. Vui lòng thử lại.");
+                    }
+                };
+            }
+
+            // Edit Property Button (only visible for admin)
+            if (event.target.closest('.edit-property-button')) {
+                const button = event.target.closest('.edit-property-button');
+                const propertyId = button.dataset.propertyId;
+                const propertyToEdit = allProperties.find(p => p.id === propertyId);
+
+                // Stop propagation to prevent the card click from triggering the modal
+                event.stopPropagation();
+
+                if (userId !== ADMIN_USER_ID) {
+                    showMessageBox("Lỗi", "Bạn không có quyền chỉnh sửa tin đăng này.");
+                    return;
+                }
+
+                if (propertyToEdit) {
+                    currentEditingPropertyId = propertyId;
+                    document.getElementById('edit-title').value = propertyToEdit.title || '';
+                    document.getElementById('edit-price').value = propertyToEdit.price || '';
+                    document.getElementById('edit-district').value = propertyToEdit.district || '';
+                    document.getElementById('edit-type').value = propertyToEdit.type || '';
+                    document.getElementById('edit-area').value = propertyToEdit.area || '';
+                    document.getElementById('edit-details').value = propertyToEdit.details || '';
+                    document.getElementById('edit-description').value = propertyToEdit.description || '';
+                    document.getElementById('edit-deposit').value = propertyToEdit.deposit || ''; // Set deposit value
+                    document.getElementById('edit-property-modal').classList.add('active');
+                } else {
+                    showMessageBox("Lỗi", "Không tìm thấy tin đăng để chỉnh sửa.");
+                }
+            }
+        });
+
+        // Close property details modal (top right X button)
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('property-modal').classList.remove('active');
+        });
+
+        // Close property details modal (bottom "Đóng" button)
+        document.getElementById('modal-close-button-bottom').addEventListener('click', () => {
+            document.getElementById('property-modal').classList.remove('active');
+        });
+
+        // Close edit property modal
+        document.getElementById('close-edit-modal').addEventListener('click', () => {
+            document.getElementById('edit-property-modal').classList.remove('active');
+            document.getElementById('edit-form-message').textContent = ''; // Clear message
+        });
+
+        // Close message box
+        document.getElementById('close-message-box').addEventListener('click', () => {
+            document.getElementById('message-box').classList.remove('active');
+        });
+
+        document.getElementById('message-box-ok').addEventListener('click', () => {
+            document.getElementById('message-box').classList.remove('active');
+        });
+
+        // Handle new property form submission
+        document.getElementById('new-property-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            if (!isAuthReady || !db || !userId) {
+                showMessageBox("Lỗi", "Không thể đăng tin. Vui lòng thử lại sau khi xác thực.");
+                return;
+            }
+
+            const formMessage = document.getElementById('form-message');
+            formMessage.textContent = 'Đang đăng tin...';
+            formMessage.className = 'mt-4 text-center text-blue-600 text-sm';
+
+            const newProperty = {
+                title: document.getElementById('new-title').value,
+                price: document.getElementById('new-price').value,
+                district: document.getElementById('new-district').value,
+                type: document.getElementById('new-type').value,
+                area: document.getElementById('new-area').value,
+                details: document.getElementById('new-details').value, // Get 'Chi tiết' value
+                description: document.getElementById('new-description').value,
+                deposit: document.getElementById('new-deposit').value, // Get 'Tiền cọc' value
+                userId: userId, // Store the user ID with the post
+                timestamp: new Date(), // Add a timestamp
+                source: 'app-created' // Mark as created by the app
+            };
+
+            try {
+                // Add to public collection and get the document reference
+                const publicDocRef = await addDoc(collection(db, `artifacts/${appId}/public/data/properties`), newProperty);
+                
+                // Use the same ID to set the document in the user's private collection
+                await setDoc(doc(db, `artifacts/${appId}/users/${userId}/properties`, publicDocRef.id), newProperty);
+
+                formMessage.textContent = 'Tin đăng đã được đăng thành công!';
+                formMessage.className = 'mt-4 text-center text-green-600 text-sm';
+                document.getElementById('new-property-form').reset(); // Clear the form
+                showMessageBox("Thành công", "Tin đăng của bạn đã được đăng thành công!");
+                // Firestore listener will automatically re-render
+            } catch (e) {
+                console.error("Lỗi khi thêm tài liệu:", e);
+                formMessage.textContent = 'Lỗi khi đăng tin. Vui lòng thử lại.';
+                formMessage.className = 'mt-4 text-center text-red-600 text-sm';
+                showMessageBox("Lỗi", "Không thể đăng tin. Vui lòng kiểm tra kết nối và thử lại.");
+            }
+        });
+
+        // Handle edit property form submission
+        document.getElementById('edit-property-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            if (!isAuthReady || !db || !userId || !currentEditingPropertyId) {
+                showMessageBox("Lỗi", "Không thể lưu thay đổi. Vui lòng thử lại sau khi xác thực.");
+                return;
+            }
+
+            // Ensure only admin can save changes for Firestore posts
+            if (userId !== ADMIN_USER_ID) {
+                showMessageBox("Lỗi", "Bạn không có quyền lưu thay đổi cho tin đăng này.");
+                return;
+            }
+
+            const editFormMessage = document.getElementById('edit-form-message');
+            editFormMessage.textContent = 'Đang lưu thay đổi...';
+            editFormMessage.className = 'mt-4 text-center text-blue-600 text-sm';
+
+            const updatedProperty = {
+                title: document.getElementById('edit-title').value,
+                price: document.getElementById('edit-price').value,
+                district: document.getElementById('edit-district').value,
+                type: document.getElementById('edit-type').value,
+                area: document.getElementById('edit-area').value,
+                details: document.getElementById('edit-details').value, // Get updated 'Chi tiết' value
+                description: document.getElementById('edit-description').value,
+                deposit: document.getElementById('edit-deposit').value, // Get updated 'Tiền cọc' value
+            };
+
+            try {
+                // Update in public collection
+                await updateDoc(doc(db, `artifacts/${appId}/public/data/properties`, currentEditingPropertyId), updatedProperty);
+                
+                // Update in user's private collection if it was originally created by the current user
+                const propertyBeingEdited = allProperties.find(p => p.id === currentEditingPropertyId);
+                if (propertyBeingEdited && propertyBeingEdited.userId === userId && propertyBeingEdited.source !== 'google-sheet-imported') {
+                    await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/properties`, currentEditingPropertyId), updatedProperty);
+                }
+
+                editFormMessage.textContent = 'Thay đổi đã được lưu thành công!';
+                editFormMessage.className = 'mt-4 text-center text-green-600 text-sm';
+                document.getElementById('edit-property-modal').classList.remove('active'); // Close modal
+                showMessageBox("Thành công", "Tin đăng đã được cập nhật thành công!");
+                // Firestore listener will automatically re-render
+            } catch (e) {
+                console.error("Lỗi khi cập nhật tài liệu:", e);
+                editFormMessage.textContent = 'Lỗi khi lưu thay đổi. Vui lòng thử lại.';
+                editFormMessage.className = 'mt-4 text-center text-red-600 text-sm';
+                showMessageBox("Lỗi", "Không thể cập nhật tin đăng. Vui lòng kiểm tra kết nối và thử lại.");
+            }
+        });
+
+        // Navigation event listeners
+        // Uncommented nav-home event listener
+        document.getElementById('nav-home').addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage('home-page');
+        });
+
+        document.getElementById('nav-post-new').addEventListener('click', (e) => {
+            e.preventDefault();
+            // Only allow admin to view post new page
+            if (userId === ADMIN_USER_ID) {
+                showPage('post-new-page');
+            } else {
+                showMessageBox("Truy cập bị từ chối", "Bạn không có quyền truy cập trang này.");
+            }
+        });
+
+        // Event listener for the new sync button
+        document.getElementById('sync-google-sheet-button').addEventListener('click', syncGoogleSheetData);
+
+        // Initialize Firebase when the window loads
+        window.onload = initializeFirebase;
+    </script>
+</body>
+</html>
