@@ -6,9 +6,9 @@
     <title>NHÀ THUÊ CẦN THƠ</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Inter from Google Fonts (changed from Montserrat) -->
+    <!-- Font Inter from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons (e.g., search, heart) -->
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -181,7 +181,6 @@
         <div class="bg-gray-100 py-2 px-4 text-sm text-gray-600 border-b border-gray-200">
             <div class="container mx-auto flex flex-col md:flex-row justify-end md:items-center space-y-1 md:space-y-0 md:space-x-4">
                 <p class="text-center md:text-right">Hotline: <a href="tel:0901026345" class="hover:text-blue-600 transition-colors duration-300 font-semibold">0901.026.345</a></p>
-                <!-- Removed "Liên Hệ" link -->
                 <!-- Admin Nav Links (will be shown/hidden by JS) -->
                 <ul id="admin-nav-links" class="flex flex-row justify-center space-x-4 md:space-x-8 text-center md:text-left hidden">
                     <li><a href="#" id="nav-home" class="block text-gray-700 hover:text-blue-600 transition-colors duration-300 font-medium text-base md:text-lg">Trang Chủ</a></li>
@@ -216,7 +215,6 @@
 
         <!-- Home Page Content -->
         <div id="home-page" class="page-content active">
-            <!-- Removed the main search and filter section -->
             <!-- Property Listings Section - Enhanced for Chotot style -->
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="property-listings">
                 <!-- Properties will be loaded here by JavaScript -->
@@ -433,9 +431,15 @@
         import { getFirestore, collection, addDoc, query, onSnapshot, doc, deleteDoc, updateDoc, setDoc, getDocs, where, limit, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase configuration and initialization
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const firebaseConfig = {
+            apiKey: "AIzaSyBF56XHUQzze7JVWuOu7P9BCUJyPdT53bQ",
+            authDomain: "nhathuecanthonew.firebaseapp.com",
+            projectId: "nhathuecanthonew",
+            storageBucket: "nhathuecanthonew.firebasestorage.app",
+            messagingSenderId: "233518101201",
+            appId: "1:233518101201:web:c77292cad9e2eed5c2cbf0",
+            measurementId: "G-5FK7Z24L2V"
+        };
 
         let app;
         let db;
@@ -447,9 +451,9 @@
         let allProperties = []; // To store properties fetched from Firestore
         let currentEditingPropertyId = null; // To store the ID of the property being edited
         
-        // Define the admin user ID here. Replace 'YOUR_ADMIN_USER_ID_HERE' with the actual user ID you want to designate as admin.
-        // You can find your user ID in the browser's developer console after the app loads and authenticates.
-        const ADMIN_USER_ID = '14847074405510090096'; // Example: '14847074405510090096' from your debug log
+        // Define the admin user ID here. REPLACE WITH YOUR ACTUAL ADMIN USER ID.
+        // You can find your user ID in the browser's developer console after the app loads and authenticates in the Canvas environment.
+        const ADMIN_USER_ID = 'YOUR_ADMIN_USER_ID_HERE'; 
 
         // Function to show custom message box
         function showMessageBox(title, message) {
@@ -464,10 +468,6 @@
                 page.classList.remove('active');
             });
             document.getElementById(pageId).classList.add('active');
-            // When navigating to home page, ensure data is rendered from Firestore
-            if (pageId === 'home-page' && isAuthReady) {
-                // The onSnapshot listener will handle rendering, so no explicit call here
-            }
         }
 
         // Function to format currency
@@ -518,7 +518,7 @@
             syncMessageElement.className = 'mt-2 text-sm text-blue-600';
 
             const googleSheetCsvUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vQqaOLdvzyAPxme8BxT2OvnCU84KjXdM6oruAAQt_-ZIjiqdmGZ7mTfhxAQ7zU4yKvUdb6IBb15G3lq/pub?gid=61368668&single=true&output=csv`;
-            const propertiesCollectionRef = collection(db, `artifacts/${appId}/public/data/properties`);
+            const propertiesCollectionRef = collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`); // Use firebaseConfig.appId
 
             try {
                 // 1. Fetch all existing google-sheet-imported documents from Firestore
@@ -679,20 +679,20 @@
                         console.log("DEBUG: Người dùng đã xác thực với ID:", userId);
                         isAuthReady = true;
 
-                        // Show admin sync section if user is admin
+                        // Show admin nav links and post page if user is admin
                         if (userId === ADMIN_USER_ID) {
                             document.getElementById('admin-sync-section').style.display = 'block';
-                            document.getElementById('admin-nav-links').classList.remove('hidden'); // Show admin nav links
-                            document.getElementById('post-new-page').classList.remove('hidden'); // Ensure post page is not hidden by default
+                            document.getElementById('admin-nav-links').classList.remove('hidden'); 
+                            document.getElementById('post-new-page').classList.remove('hidden'); 
                         } else {
                             document.getElementById('admin-sync-section').style.display = 'none';
-                            document.getElementById('admin-nav-links').classList.add('hidden'); // Hide admin nav links
-                            document.getElementById('post-new-page').classList.add('hidden'); // Hide post page
+                            document.getElementById('admin-nav-links').classList.add('hidden'); 
+                            document.getElementById('post-new-page').classList.add('hidden'); 
                         }
 
                         // Check if Google Sheet data has already been imported
                         // Query for any document with source 'google-sheet-imported'
-                        const importedCheckQuery = query(collection(db, `artifacts/${appId}/public/data/properties`), 
+                        const importedCheckQuery = query(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`), // Use firebaseConfig.appId
                                                          where("source", "==", "google-sheet-imported"), 
                                                          limit(1));
                         const importedSnapshot = await getDocs(importedCheckQuery);
@@ -708,7 +708,7 @@
                         if (unsubscribeFirestore) {
                             unsubscribeFirestore(); // Unsubscribe previous listener if any
                         }
-                        const q = query(collection(db, `artifacts/${appId}/public/data/properties`));
+                        const q = query(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`)); // Use firebaseConfig.appId
                         unsubscribeFirestore = onSnapshot(q, (snapshot) => {
                             // This listener will trigger whenever there's a change in Firestore
                             // and will re-render all data (including newly imported GS data)
@@ -720,11 +720,9 @@
 
                     } else {
                         console.log("DEBUG: Người dùng chưa xác thực. Đang cố gắng đăng nhập ẩn danh...");
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
+                        // For GitHub Pages, we cannot rely on __initial_auth_token.
+                        // We will always sign in anonymously if not already authenticated.
+                        await signInAnonymously(auth);
                     }
                 });
 
@@ -840,24 +838,6 @@
         }
 
         // Search functionality
-        // Removed the event listener for the main search button as the section is removed.
-        // document.getElementById('search-button').addEventListener('click', () => {
-        //     const keyword = document.getElementById('search-keyword').value.toLowerCase();
-        //     const district = document.getElementById('search-district').value;
-        //     const type = document.getElementById('search-type').value;
-
-        //     // Filter from the 'allProperties' array (combined data from Firestore)
-        //     const filtered = allProperties.filter(property => {
-        //         const matchesKeyword = (property.title && property.title.toLowerCase().includes(keyword)) ||
-        //                                (property.description && property.description.toLowerCase().includes(keyword));
-        //         const matchesDistrict = district === "" || (property.district && property.district.toLowerCase() === district.toLowerCase());
-        //         const matchesType = type === "" || (property.type && property.type.toLowerCase() === type.toLowerCase());
-        //         return matchesKeyword && matchesDistrict && matchesType;
-        //     });
-        //     renderProperties(filtered);
-        // });
-
-        // Add event listener for header search input
         document.getElementById('header-search-keyword').addEventListener('keyup', (event) => {
             if (event.key === 'Enter') {
                 const keyword = document.getElementById('header-search-keyword').value.toLowerCase();
@@ -921,13 +901,13 @@
 
                     try {
                         // Delete from the public collection
-                        await deleteDoc(doc(db, `artifacts/${appId}/public/data/properties`, propertyId));
+                        await deleteDoc(doc(db, `artifacts/${firebaseConfig.appId}/public/data/properties`, propertyId)); // Use firebaseConfig.appId
                         // Also attempt to delete from the user's private collection, in case it was a private post
                         // This assumes the private collection uses the same doc ID as public for the same post
                         // We need to check if the post was originally created by the current user (not imported)
                         const propertyToDelete = allProperties.find(p => p.id === propertyId);
                         if (propertyToDelete && propertyToDelete.userId === userId && propertyToDelete.source !== 'google-sheet-imported') { 
-                            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/properties`, propertyId));
+                            await deleteDoc(doc(db, `artifacts/${firebaseConfig.appId}/users/${userId}/properties`, propertyId)); // Use firebaseConfig.appId
                         }
                         console.log("DEBUG: Tài liệu đã được xóa với ID:", propertyId);
                         showMessageBox("Thành công", "Tin đăng đã được xóa.");
@@ -1024,10 +1004,10 @@
 
             try {
                 // Add to public collection and get the document reference
-                const publicDocRef = await addDoc(collection(db, `artifacts/${appId}/public/data/properties`), newProperty);
+                const publicDocRef = await addDoc(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`), newProperty); // Use firebaseConfig.appId
                 
                 // Use the same ID to set the document in the user's private collection
-                await setDoc(doc(db, `artifacts/${appId}/users/${userId}/properties`, publicDocRef.id), newProperty);
+                await setDoc(doc(db, `artifacts/${firebaseConfig.appId}/users/${userId}/properties`, publicDocRef.id), newProperty); // Use firebaseConfig.appId
 
                 formMessage.textContent = 'Tin đăng đã được đăng thành công!';
                 formMessage.className = 'mt-4 text-center text-green-600 text-sm';
@@ -1074,12 +1054,12 @@
 
             try {
                 // Update in public collection
-                await updateDoc(doc(db, `artifacts/${appId}/public/data/properties`, currentEditingPropertyId), updatedProperty);
+                await updateDoc(doc(db, `artifacts/${firebaseConfig.appId}/public/data/properties`, currentEditingPropertyId), updatedProperty); // Use firebaseConfig.appId
                 
                 // Update in user's private collection if it was originally created by the current user
                 const propertyBeingEdited = allProperties.find(p => p.id === currentEditingPropertyId);
                 if (propertyBeingEdited && propertyBeingEdited.userId === userId && propertyBeingEdited.source !== 'google-sheet-imported') {
-                    await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/properties`, currentEditingPropertyId), updatedProperty);
+                    await updateDoc(doc(db, `artifacts/${firebaseConfig.appId}/users/${userId}/properties`, currentEditingPropertyId), updatedProperty); // Use firebaseConfig.appId
                 }
 
                 editFormMessage.textContent = 'Thay đổi đã được lưu thành công!';
@@ -1096,7 +1076,6 @@
         });
 
         // Navigation event listeners
-        // Uncommented nav-home event listener
         document.getElementById('nav-home').addEventListener('click', (e) => {
             e.preventDefault();
             showPage('home-page');
@@ -1120,3 +1099,4 @@
     </script>
 </body>
 </html>
+
