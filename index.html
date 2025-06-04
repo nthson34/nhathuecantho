@@ -195,11 +195,22 @@
                 <!-- Adjusted font size for mobile (text-2xl) and desktop (md:text-3xl) -->
                 <h1 class="text-2xl md:text-3xl font-extrabold text-blue-700 text-center md:text-left">NHÀ THUÊ CẦN THƠ</h1>
             </div>
-            <!-- Search bar - positioned closer to title -->
-            <div class="relative w-full max-w-full md:max-w-xs ml-auto md:ml-0"> <!-- Added ml-auto to push it right on mobile if needed, max-w-xs for smaller desktop -->
-                <input type="text" id="header-search-keyword" placeholder="Tìm kiếm nhanh..."
-                       class="w-full p-2 pl-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-sm shadow-sm"> <!-- Smaller padding and text -->
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i> <!-- Smaller icon -->
+            <!-- Right side: Search bar and Admin Login -->
+            <div class="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4 w-full md:w-auto">
+                <!-- Search bar -->
+                <div class="relative w-full max-w-full md:max-w-xs">
+                    <input type="text" id="header-search-keyword" placeholder="Tìm kiếm nhanh..."
+                           class="w-full p-2 pl-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-sm shadow-sm">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
+                </div>
+                <!-- Admin Login Section - NEW POSITION -->
+                <div id="admin-login-section" class="flex items-center space-x-2 hidden bg-gray-50 p-2 rounded-lg border border-gray-200 shadow-sm">
+                    <label for="admin-security-code" class="sr-only">Mã bảo mật Admin</label>
+                    <input type="password" id="admin-security-code" placeholder="Mã Admin"
+                           class="w-24 p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs shadow-sm">
+                    <button id="admin-login-button" class="btn-purple text-xs px-2 py-1">Đăng nhập</button>
+                    <button id="admin-logout-button" class="btn-secondary text-xs px-2 py-1 hidden">Đăng xuất</button>
+                </div>
             </div>
         </div>
     </header>
@@ -427,8 +438,8 @@
     <script type="module">
         // Firebase SDK imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, doc, deleteDoc, updateDoc, setDoc, getDocs, where, limit, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, doc, deleteDoc, updateDoc, setDoc, getDoc, writeBatch, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase configuration and initialization
         const firebaseConfig = {
@@ -447,13 +458,16 @@
         let userId = null;
         let isAuthReady = false;
         let unsubscribeFirestore = null; // To manage Firestore real-time listener
+        let isAdmin = false; // New flag to track admin status
 
         let allProperties = []; // To store properties fetched from Firestore
         let currentEditingPropertyId = null; // To store the ID of the property being edited
         
-        // Define the admin user ID here. REPLACE WITH YOUR ACTUAL ADMIN USER ID.
-        // You can find your user ID in the browser's developer console after the app loads and authenticates in the Canvas environment.
-        const ADMIN_USER_ID = '5p0KyiGMCRfzLsctu7Hly7Vj44C2'; 
+        // IMPORTANT SECURITY NOTE: Hardcoding a SECRET_ADMIN_CODE in client-side JavaScript
+        // is NOT secure for production applications. Anyone can view your source code
+        // and find this code. For a real application, this should be validated on a server
+        // (e.g., Firebase Cloud Functions) or use more robust authentication methods.
+        const SECRET_ADMIN_CODE = '211092'; // Define your secret admin code here
 
         // Function to show custom message box
         function showMessageBox(title, message) {
@@ -468,6 +482,34 @@
                 page.classList.remove('active');
             });
             document.getElementById(pageId).classList.add('active');
+        }
+
+        // Function to update UI based on admin status
+        function updateAdminUI() {
+            const adminNavLinks = document.getElementById('admin-nav-links');
+            const adminLoginSection = document.getElementById('admin-login-section'); // Get the section itself
+            const adminLoginButton = document.getElementById('admin-login-button');
+            const adminLogoutButton = document.getElementById('admin-logout-button');
+            const adminSyncSection = document.getElementById('admin-sync-section');
+            const postNewPage = document.getElementById('post-new-page');
+
+            if (isAdmin) {
+                adminNavLinks.classList.remove('hidden');
+                adminLoginSection.classList.remove('hidden'); // Show the admin login section
+                adminLoginButton.classList.add('hidden');
+                adminLogoutButton.classList.remove('hidden');
+                adminSyncSection.style.display = 'block';
+                postNewPage.classList.remove('hidden'); // Show post new page for admin
+            } else {
+                adminNavLinks.classList.add('hidden');
+                adminLoginSection.classList.remove('hidden'); // Still show the login section for non-admins to log in
+                adminLoginButton.classList.remove('hidden');
+                adminLogoutButton.classList.add('hidden');
+                adminSyncSection.style.display = 'none';
+                postNewPage.classList.add('hidden'); // Hide post new page for non-admin
+            }
+            // Re-render properties to update edit/delete buttons visibility
+            renderProperties(allProperties);
         }
 
         // Function to format currency
@@ -487,7 +529,7 @@
 
             // Remove thousands separators (dots) before parsing as a number.
             // This regex ensures we only remove dots that are thousands separators, not decimal points.
-            // It replaces a dot if it's followed by exactly three digits and then optionally more digits or end of string.
+            // It replaces a dot if it's followed by exactly three digits and then then optionally more digits or end of string.
             let finalNumericString = cleanedAmount.replace(/\.(?=\d{3}(?:\.|$))/g, ''); 
             
             numericValue = parseFloat(finalNumericString);
@@ -679,27 +721,27 @@
                         console.log("DEBUG: Người dùng đã xác thực với ID:", userId);
                         isAuthReady = true;
 
-                        // Show admin nav links and post page if user is admin
-                        if (userId === ADMIN_USER_ID) {
-                            document.getElementById('admin-sync-section').style.display = 'block';
-                            document.getElementById('admin-nav-links').classList.remove('hidden'); 
-                            document.getElementById('post-new-page').classList.remove('hidden'); 
-                        } else {
-                            document.getElementById('admin-sync-section').style.display = 'none';
-                            document.getElementById('admin-nav-links').classList.add('hidden'); 
-                            document.getElementById('post-new-page').classList.add('hidden'); 
-                        }
+                        // Check if the current user is an admin
+                        const adminDocRef = doc(db, `artifacts/${firebaseConfig.appId}/public/data/admins`, userId);
+                        const adminDocSnap = await getDoc(adminDocRef);
+                        isAdmin = adminDocSnap.exists();
+                        console.log(`DEBUG: Người dùng hiện tại là Admin: ${isAdmin}`);
+
+                        updateAdminUI(); // Update UI based on admin status
 
                         // Check if Google Sheet data has already been imported
-                        // Query for any document with source 'google-sheet-imported'
-                        const importedCheckQuery = query(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`), // Use firebaseConfig.appId
+                        const importedCheckQuery = query(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`), 
                                                          where("source", "==", "google-sheet-imported"), 
                                                          limit(1));
                         const importedSnapshot = await getDocs(importedCheckQuery);
 
                         if (importedSnapshot.empty) {
-                            // If no imported documents found, proceed with initial sync
-                            await syncGoogleSheetData();
+                            // Only sync if user is admin AND no data has been imported yet
+                            if (isAdmin) {
+                                await syncGoogleSheetData();
+                            } else {
+                                console.log("DEBUG: Không phải Admin hoặc dữ liệu Google Sheet đã được nhập, bỏ qua đồng bộ ban đầu.");
+                            }
                         } else {
                             console.log("DEBUG: Dữ liệu Google Sheet đã được nhập vào Firestore, bỏ qua quá trình nhập ban đầu.");
                         }
@@ -708,10 +750,8 @@
                         if (unsubscribeFirestore) {
                             unsubscribeFirestore(); // Unsubscribe previous listener if any
                         }
-                        const q = query(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`)); // Use firebaseConfig.appId
+                        const q = query(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`)); 
                         unsubscribeFirestore = onSnapshot(q, (snapshot) => {
-                            // This listener will trigger whenever there's a change in Firestore
-                            // and will re-render all data (including newly imported GS data)
                             renderAllPropertiesFromFirestore(snapshot);
                         }, (error) => {
                             console.error("Lỗi khi lắng nghe Firestore:", error);
@@ -720,8 +760,6 @@
 
                     } else {
                         console.log("DEBUG: Người dùng chưa xác thực. Đang cố gắng đăng nhập ẩn danh...");
-                        // For GitHub Pages, we cannot rely on __initial_auth_token.
-                        // We will always sign in anonymously if not already authenticated.
                         await signInAnonymously(auth);
                     }
                 });
@@ -819,8 +857,8 @@
                             <div class="flex justify-between items-center text-xs text-gray-500">
                                 <span class="text-sm font-medium">Đăng bởi: ${isImportedFromGoogleSheet ? 'Google Sheet (Đã nhập)' : (property.userId ? property.userId.substring(0, 8) + '...' : 'Ứng dụng')}</span>
                                 <div class="flex space-x-3">
-                                    <!-- Edit/Delete buttons are only shown for admin ID -->
-                                    ${userId === ADMIN_USER_ID ? `
+                                    <!-- Edit/Delete buttons are only shown if isAdmin is true -->
+                                    ${isAdmin ? `
                                     <button class="btn-warning text-xl edit-property-button" data-property-id="${property.id}" title="Chỉnh sửa">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -890,7 +928,7 @@
                 // Stop propagation to prevent the card click from triggering the modal
                 event.stopPropagation(); 
 
-                if (userId !== ADMIN_USER_ID) {
+                if (!isAdmin) { // Check isAdmin flag
                     showMessageBox("Lỗi", "Bạn không có quyền xóa tin đăng này.");
                     return;
                 }
@@ -902,9 +940,8 @@
                     try {
                         // Delete from the public collection
                         await deleteDoc(doc(db, `artifacts/${firebaseConfig.appId}/public/data/properties`, propertyId)); // Use firebaseConfig.appId
+                        
                         // Also attempt to delete from the user's private collection, in case it was a private post
-                        // This assumes the private collection uses the same doc ID as public for the same post
-                        // We need to check if the post was originally created by the current user (not imported)
                         const propertyToDelete = allProperties.find(p => p.id === propertyId);
                         if (propertyToDelete && propertyToDelete.userId === userId && propertyToDelete.source !== 'google-sheet-imported') { 
                             await deleteDoc(doc(db, `artifacts/${firebaseConfig.appId}/users/${userId}/properties`, propertyId)); // Use firebaseConfig.appId
@@ -928,7 +965,7 @@
                 // Stop propagation to prevent the card click from triggering the modal
                 event.stopPropagation();
 
-                if (userId !== ADMIN_USER_ID) {
+                if (!isAdmin) { // Check isAdmin flag
                     showMessageBox("Lỗi", "Bạn không có quyền chỉnh sửa tin đăng này.");
                     return;
                 }
@@ -1032,7 +1069,7 @@
             }
 
             // Ensure only admin can save changes for Firestore posts
-            if (userId !== ADMIN_USER_ID) {
+            if (!isAdmin) { // Check isAdmin flag
                 showMessageBox("Lỗi", "Bạn không có quyền lưu thay đổi cho tin đăng này.");
                 return;
             }
@@ -1084,10 +1121,54 @@
         document.getElementById('nav-post-new').addEventListener('click', (e) => {
             e.preventDefault();
             // Only allow admin to view post new page
-            if (userId === ADMIN_USER_ID) {
+            if (isAdmin) { // Check isAdmin flag
                 showPage('post-new-page');
             } else {
                 showMessageBox("Truy cập bị từ chối", "Bạn không có quyền truy cập trang này.");
+            }
+        });
+
+        // Admin login button click handler
+        document.getElementById('admin-login-button').addEventListener('click', async () => {
+            const adminCodeInput = document.getElementById('admin-security-code');
+            const enteredCode = adminCodeInput.value;
+
+            if (enteredCode === SECRET_ADMIN_CODE) {
+                if (userId) {
+                    try {
+                        const adminDocRef = doc(db, `artifacts/${firebaseConfig.appId}/public/data/admins`, userId);
+                        await setDoc(adminDocRef, { timestamp: new Date() }); // Add user's UID to admin list
+                        isAdmin = true;
+                        updateAdminUI();
+                        adminCodeInput.value = ''; // Clear code
+                        showMessageBox("Thành công", "Bạn đã đăng nhập Admin thành công!");
+                    } catch (error) {
+                        console.error("Lỗi khi ghi trạng thái Admin vào Firestore:", error);
+                        showMessageBox("Lỗi", "Không thể lưu trạng thái Admin. Vui lòng kiểm tra kết nối và quy tắc Firestore.");
+                    }
+                } else {
+                    showMessageBox("Lỗi", "Không thể xác định người dùng. Vui lòng thử lại.");
+                }
+            } else {
+                showMessageBox("Lỗi", "Mã bảo mật không đúng.");
+            }
+        });
+
+        // Admin logout button click handler
+        document.getElementById('admin-logout-button').addEventListener('click', async () => {
+            if (userId && isAdmin) {
+                try {
+                    const adminDocRef = doc(db, `artifacts/${firebaseConfig.appId}/public/data/admins`, userId);
+                    await deleteDoc(adminDocRef); // Remove user's UID from admin list
+                    isAdmin = false;
+                    updateAdminUI();
+                    showMessageBox("Thành công", "Bạn đã đăng xuất Admin.");
+                } catch (error) {
+                    console.error("Lỗi khi xóa trạng thái Admin khỏi Firestore:", error);
+                    showMessageBox("Lỗi", "Không thể đăng xuất Admin. Vui lòng thử lại.");
+                }
+            } else {
+                showMessageBox("Thông báo", "Bạn chưa đăng nhập Admin.");
             }
         });
 
@@ -1099,4 +1180,3 @@
     </script>
 </body>
 </html>
-
