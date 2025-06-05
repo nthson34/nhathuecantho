@@ -660,22 +660,11 @@
                     })));
                     currentGoogleSheetHashes[gs_hash] = true; // Mark this hash as present in current GS data
 
+                    // Logic thay đổi: Nếu hash đã tồn tại trong Firestore, bỏ qua không cập nhật
                     if (firestoreImportedProps[gs_hash]) {
-                        // Document with this hash exists in Firestore, update it
-                        const docRef = doc(propertiesCollectionRef, firestoreImportedProps[gs_hash].id);
-                        batch.update(docRef, {
-                            title: propertyData.title,
-                            price: propertyData.price,
-                            details: propertyData.details,
-                            deposit: propertyData.deposit,
-                            district: propertyData.district,
-                            type: propertyData.type,
-                            area: propertyData.area,
-                            description: propertyData.description,
-                            // Keep existing source, gs_hash, timestamp, userId as they are metadata
-                        });
-                        delete firestoreImportedProps[gs_hash]; // Remove from map as it's processed
-                        console.log(`DEBUG: Đã cập nhật tin đăng từ Google Sheet: ${docRef.id}`);
+                        console.log(`DEBUG: Tin đăng với hash "${gs_hash}" đã tồn tại trong Firestore và dữ liệu không thay đổi. Bỏ qua cập nhật.`);
+                        delete firestoreImportedProps[gs_hash]; // Xóa khỏi danh sách để không bị xóa sau này (nếu có logic xóa)
+                        continue; // Bỏ qua dòng này và chuyển sang dòng tiếp theo
                     } else {
                         // Document with this hash does not exist, add it
                         const newDocRef = doc(propertiesCollectionRef); // Let Firestore generate ID
