@@ -172,6 +172,20 @@
             color: #dc2626; /* Red-700 */
             transform: scale(1.1);
         }
+        /* Style for image previews in forms */
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .image-preview-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -203,7 +217,7 @@
                            class="w-full p-2 pl-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-sm shadow-sm">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base"></i>
                 </div>
-                <!-- Admin Login Section - NEW POSITION -->
+                <!-- Admin Login Section -->
                 <div id="admin-login-section" class="flex items-center space-x-2 hidden bg-gray-50 p-2 rounded-lg border border-gray-200 shadow-sm">
                     <label for="admin-security-code" class="sr-only">Mã bảo mật Admin</label>
                     <input type="password" id="admin-security-code" placeholder="Mã Admin"
@@ -281,10 +295,17 @@
                                class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
                     </div>
                     <div>
-                        <label for="new-details" class="block text-gray-700 text-sm font-bold mb-2">Chi tiết (URL ảnh/video trực tiếp):</label>
+                        <label for="new-images" class="block text-gray-700 text-sm font-bold mb-2">Tải ảnh lên:</label>
+                        <input type="file" id="new-images" multiple accept="image/*"
+                               class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        <div id="new-image-preview-container" class="image-preview-container"></div>
+                        <p class="text-xs text-gray-500 mt-1">Chọn một hoặc nhiều tệp ảnh (JPEG, PNG, GIF).</p>
+                    </div>
+                    <div>
+                        <label for="new-details" class="block text-gray-700 text-sm font-bold mb-2">Chi tiết (URL ảnh/video trực tiếp nếu không tải ảnh):</label>
                         <input type="url" id="new-details" placeholder="https://example.com/image.jpg hoặc https://example.com/video.mp4"
                                class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
-                        <p class="text-xs text-gray-500 mt-1">Vui lòng nhập liên kết trực tiếp đến ảnh hoặc video. Liên kết thư mục (ví dụ: Google Drive) có thể không hoạt động.</p>
+                        <p class="text-xs text-gray-500 mt-1">Sử dụng trường này nếu bạn muốn liên kết đến ảnh/video bên ngoài thay vì tải trực tiếp.</p>
                     </div>
                     <div class="md:col-span-2">
                         <label for="new-description" class="block text-gray-700 text-sm font-bold mb-2">Mô tả:</label>
@@ -337,6 +358,7 @@
             <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-3"></h3>
             <p id="modal-price" class="text-blue-600 font-semibold text-xl mb-2"></p>
             <p id="modal-basic-details" class="text-gray-600 text-base mb-4"></p> <!-- Basic details like district, type, area -->
+            <div id="modal-images-container" class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4 mb-4"></div>
             <div id="modal-details-link-container" class="mt-4 mb-4">
                 <!-- Details link will be inserted here -->
             </div>
@@ -397,10 +419,17 @@
                            class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
                 </div>
                 <div>
-                    <label for="edit-details" class="block text-gray-700 text-sm font-bold mb-2">Chi tiết (URL ảnh/video trực tiếp):</label>
+                    <label for="edit-images" class="block text-gray-700 text-sm font-bold mb-2">Tải ảnh lên:</label>
+                    <input type="file" id="edit-images" multiple accept="image/*"
+                           class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    <div id="edit-image-preview-container" class="image-preview-container"></div>
+                    <p class="text-xs text-gray-500 mt-1">Chọn thêm ảnh (sẽ thêm vào các ảnh hiện có).</p>
+                </div>
+                <div>
+                    <label for="edit-details" class="block text-gray-700 text-sm font-bold mb-2">Chi tiết (URL ảnh/video trực tiếp nếu không tải ảnh):</label>
                     <input type="url" id="edit-details" placeholder="https://example.com/image.jpg hoặc https://example.com/video.mp4"
                            class="p-3 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
-                        <p class="text-xs text-gray-500 mt-1">Vui lòng nhập liên kết trực tiếp đến ảnh hoặc video. Liên kết thư mục (ví dụ: Google Drive) có thể không hoạt động.</p>
+                        <p class="text-xs text-gray-500 mt-1">Sử dụng trường này nếu bạn muốn liên kết đến ảnh/video bên ngoài thay vì tải trực tiếp.</p>
                 </div>
                 <div class="md:col-span-2">
                     <label for="edit-description" class="block text-gray-700 text-sm font-bold mb-2">Mô tả:</label>
@@ -440,6 +469,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, onSnapshot, doc, deleteDoc, updateDoc, setDoc, getDoc, writeBatch, limit, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // Firebase configuration and initialization
         const firebaseConfig = {
@@ -455,6 +485,7 @@
         let app;
         let db;
         let auth;
+        let storage; // Declare storage variable
         let userId = null;
         let isAuthReady = false;
         let unsubscribeFirestore = null; // To manage Firestore real-time listener
@@ -552,6 +583,41 @@
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(numericValue);
         }
 
+        /**
+         * Uploads image files to Firebase Storage.
+         * @param {FileList} files - The FileList object from an input type="file".
+         * @param {string} propertyId - The ID of the property to categorize the images.
+         * @returns {Promise<string[]>} A promise that resolves to an array of download URLs.
+         */
+        async function uploadImages(files, propertyId) {
+            if (!storage || !userId) {
+                console.error("Firebase Storage hoặc userId chưa sẵn sàng.");
+                showMessageBox("Lỗi tải ảnh", "Dịch vụ tải ảnh chưa sẵn sàng. Vui lòng thử lại sau.");
+                return [];
+            }
+            if (files.length === 0) {
+                return [];
+            }
+
+            const downloadUrls = [];
+            for (const file of files) {
+                const fileName = `${Date.now()}_${file.name}`; // Unique filename
+                const storagePath = `properties_images/${propertyId}/${fileName}`;
+                const imageRef = ref(storage, storagePath);
+
+                try {
+                    const snapshot = await uploadBytes(imageRef, file);
+                    const url = await getDownloadURL(snapshot.ref);
+                    downloadUrls.push(url);
+                    console.log(`DEBUG: Tải ảnh thành công: ${url}`);
+                } catch (error) {
+                    console.error(`Lỗi tải ảnh "${file.name}":`, error);
+                    showMessageBox("Lỗi tải ảnh", `Không thể tải ảnh "${file.name}". Vui lòng thử lại.`);
+                }
+            }
+            return downloadUrls;
+        }
+
         // Function to sync Google Sheet data into Firestore
         async function syncGoogleSheetData() {
             console.log("DEBUG: Đang tiến hành đồng bộ dữ liệu từ Google Sheet vào Firestore...");
@@ -621,12 +687,13 @@
                     let propertyData = {
                         title: '',
                         price: '',
-                        details: '',
+                        details: '', // Still process details for backward compatibility, but prioritize imageUrls
                         deposit: '',
                         district: '',
                         type: '',
                         area: '',
-                        description: ''
+                        description: '',
+                        imageUrls: [] // New field for image URLs
                     };
 
                     // Explicitly map columns based on user's request (0-indexed)
@@ -647,16 +714,23 @@
                         if (header === 'Mô tả' && values[i] !== undefined) propertyData.description = values[i];
                     });
 
-                    // Generate a stable hash for the Google Sheet row content
+                    // If a details URL is provided, add it to imageUrls
+                    if (isValidHttpUrl(propertyData.details) && !propertyData.imageUrls.includes(propertyData.details)) {
+                        propertyData.imageUrls.push(propertyData.details);
+                    }
+
+
+                    // Generate a stable hash for the Google Sheet row content (excluding timestamp, userId, source)
                     const gs_hash = btoa(encodeURIComponent(JSON.stringify({
                         title: propertyData.title || '',
                         price: propertyData.price || '',
-                        details: propertyData.details || '',
+                        details: propertyData.details || '', // Include details in hash for now for proper comparison
                         deposit: propertyData.deposit || '',
                         district: propertyData.district || '',
                         type: propertyData.type || '',
                         area: propertyData.area || '',
-                        description: propertyData.description || ''
+                        description: propertyData.description || '',
+                        imageUrls: propertyData.imageUrls.sort() // Sort array for consistent hash
                     })));
                     currentGoogleSheetHashes[gs_hash] = true; // Mark this hash as present in current GS data
 
@@ -702,6 +776,7 @@
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+                storage = getStorage(app); // Initialize Firebase Storage
 
                 // Listen for auth state changes
                 onAuthStateChanged(auth, async (user) => {
@@ -795,7 +870,13 @@
             } catch (_) {
                 return false;  
             }
-            return url.protocol === "http:" || url.protocol === "https:";
+            // Ensure the URL is an image or video directly, not a document or generic link
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg'];
+            const videoExtensions = ['.mp4', '.webm', '.ogg'];
+            const lowerString = string.toLowerCase();
+            return (url.protocol === "http:" || url.protocol === "https:") && 
+                   (imageExtensions.some(ext => lowerString.endsWith(ext)) ||
+                    videoExtensions.some(ext => lowerString.endsWith(ext)));
         }
 
         // Function to render properties
@@ -823,8 +904,21 @@
                 // All posts are now from Firestore, so no need for property.source check for display logic
                 const isImportedFromGoogleSheet = property.source === 'google-sheet-imported';
 
+                // Determine primary image for card display
+                let primaryImageUrl = '';
+                if (property.imageUrls && property.imageUrls.length > 0) {
+                    primaryImageUrl = property.imageUrls[0];
+                } else if (isValidHttpUrl(property.details)) {
+                    primaryImageUrl = property.details;
+                } else {
+                    primaryImageUrl = 'https://placehold.co/400x250/aabbcc/ffffff?text=No+Image'; // Placeholder if no image
+                }
+
                 const propertyCard = `
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl group border border-gray-100 cursor-pointer property-card-clickable" data-property-id="${property.id}">
+                        <div class="w-full h-48 bg-gray-200 overflow-hidden">
+                            <img src="${primaryImageUrl}" alt="Hình ảnh ${title}" onerror="this.onerror=null;this.src='https://placehold.co/400x250/aabbcc/ffffff?text=No+Image';" class="w-full h-full object-cover">
+                        </div>
                         <div class="p-5">
                             <!-- Highlighted title with bottom border and increased margin -->
                             <h3 class="text-xl font-extrabold text-indigo-700 pb-2 border-b-2 border-indigo-500 mb-4 line-clamp-2">${title}</h3>
@@ -864,6 +958,28 @@
             });
         }
 
+        // Preview images in forms
+        function setupImagePreview(inputId, previewContainerId) {
+            const input = document.getElementById(inputId);
+            const previewContainer = document.getElementById(previewContainerId);
+
+            input.addEventListener('change', () => {
+                previewContainer.innerHTML = ''; // Clear existing previews
+                if (input.files && input.files.length > 0) {
+                    Array.from(input.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = file.name;
+                            previewContainer.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
+        }
+
         // Search functionality
         document.getElementById('header-search-keyword').addEventListener('keyup', (event) => {
             if (event.key === 'Enter') {
@@ -885,21 +1001,46 @@
                 const propertyId = clickedCard.dataset.propertyId;
                 const property = allProperties.find(p => p.id === propertyId); 
                 const modalDetailsLinkContainer = document.getElementById('modal-details-link-container');
+                const modalImagesContainer = document.getElementById('modal-images-container');
                 modalDetailsLinkContainer.innerHTML = ''; // Clear previous content
+                modalImagesContainer.innerHTML = ''; // Clear previous images
 
                 if (property) {
                     document.getElementById('modal-title').textContent = property.title || 'Không có tiêu đề';
                     document.getElementById('modal-price').textContent = formatCurrency(property.price);
                     document.getElementById('modal-basic-details').textContent = `Quận: ${property.district || 'N/A'} | Loại: ${property.type || 'N/A'} | Diện tích: ${property.area || 'N/A'}m²`;
                     
-                    if (isValidHttpUrl(property.details)) {
-                        // Added target="_blank" to open in a new tab
-                        modalDetailsLinkContainer.innerHTML = `<p class="text-gray-700 text-base font-semibold mb-2"><a href="${property.details}" target="_blank" class="text-blue-500 hover:underline"><i class="fas fa-external-link-alt mr-2"></i>Xem thêm hình ảnh/video</a></p>`;
-                    } else if (property.details) {
-                        modalDetailsLinkContainer.innerHTML = `<p class="text-gray-700 text-base">Chi tiết: ${property.details}</p>`;
+                    // Display multiple images first if available
+                    if (property.imageUrls && property.imageUrls.length > 0) {
+                        property.imageUrls.forEach(url => {
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.alt = "Hình ảnh tin đăng";
+                            img.classList.add('w-full', 'h-auto', 'rounded-lg', 'object-cover');
+                            img.onerror = function() { this.onerror=null; this.src='https://placehold.co/400x250/aabbcc/ffffff?text=No+Image'; };
+                            modalImagesContainer.appendChild(img);
+                        });
+                    } else if (isValidHttpUrl(property.details)) { // Fallback to single 'details' URL if no 'imageUrls'
+                        const img = document.createElement('img');
+                        img.src = property.details;
+                        img.alt = "Hình ảnh tin đăng";
+                        img.classList.add('w-full', 'h-auto', 'rounded-lg', 'object-cover');
+                        img.onerror = function() { this.onerror=null; this.src='https://placehold.co/400x250/aabbcc/ffffff?text=No+Image'; };
+                        modalImagesContainer.appendChild(img);
+                    } else {
+                        modalImagesContainer.innerHTML = '<p class="text-gray-500 text-center col-span-full">Không có hình ảnh.</p>';
+                    }
+
+                    // Display details link if it's a URL
+                    if (property.details && !property.imageUrls?.includes(property.details) && isValidHttpUrl(property.details)) {
+                        modalDetailsLinkContainer.innerHTML = `<p class="text-gray-700 text-base font-semibold mb-2"><a href="${property.details}" target="_blank" class="text-blue-500 hover:underline"><i class="fas fa-external-link-alt mr-2"></i>Xem thêm chi tiết (URL)</a></p>`;
+                    } else if (property.details && !isValidHttpUrl(property.details)) {
+                         modalDetailsLinkContainer.innerHTML = `<p class="text-gray-700 text-base">Chi tiết: ${property.details}</p>`;
                     } else {
                         modalDetailsLinkContainer.innerHTML = `<p class="text-gray-700 text-base">Không có chi tiết.</p>`;
                     }
+
+
                     document.getElementById('modal-description').textContent = property.description || 'Không có mô tả.';
                     // Display deposit as raw string
                     document.getElementById('modal-deposit').textContent = `Tiền cọc: ${property.deposit || 'Không có thông tin cọc'}`;
@@ -927,11 +1068,25 @@
                     document.getElementById('message-box').classList.remove('active'); // Hide message box
 
                     try {
+                        // Get the property to delete its images from storage
+                        const propertyToDelete = allProperties.find(p => p.id === propertyId);
+                        if (propertyToDelete && propertyToDelete.imageUrls && propertyToDelete.imageUrls.length > 0) {
+                            for (const imageUrl of propertyToDelete.imageUrls) {
+                                try {
+                                    const imageRef = ref(storage, imageUrl);
+                                    await deleteObject(imageRef);
+                                    console.log(`DEBUG: Đã xóa ảnh từ Storage: ${imageUrl}`);
+                                } catch (storageError) {
+                                    console.warn(`Cảnh báo: Không thể xóa ảnh từ Storage (${imageUrl}):`, storageError);
+                                    // Continue even if image deletion fails, as Firestore doc delete is more critical
+                                }
+                            }
+                        }
+
                         // Delete from the public collection
                         await deleteDoc(doc(db, `artifacts/${firebaseConfig.appId}/public/data/properties`, propertyId)); // Use firebaseConfig.appId
                         
                         // Also attempt to delete from the user's private collection, in case it was a private post
-                        const propertyToDelete = allProperties.find(p => p.id === propertyId);
                         if (propertyToDelete && propertyToDelete.userId === userId && propertyToDelete.source !== 'google-sheet-imported') { 
                             await deleteDoc(doc(db, `artifacts/${firebaseConfig.appId}/users/${userId}/properties`, propertyId)); // Use firebaseConfig.appId
                         }
@@ -969,6 +1124,20 @@
                     document.getElementById('edit-details').value = propertyToEdit.details || '';
                     document.getElementById('edit-description').value = propertyToEdit.description || '';
                     document.getElementById('edit-deposit').value = propertyToEdit.deposit || ''; // Set deposit value
+                    
+                    // Clear and display existing image previews for edit
+                    const editImagePreviewContainer = document.getElementById('edit-image-preview-container');
+                    editImagePreviewContainer.innerHTML = '';
+                    if (propertyToEdit.imageUrls && propertyToEdit.imageUrls.length > 0) {
+                        propertyToEdit.imageUrls.forEach(url => {
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.alt = "Ảnh hiện có";
+                            // Add a delete button for existing images if needed (more complex UI)
+                            editImagePreviewContainer.appendChild(img);
+                        });
+                    }
+
                     document.getElementById('edit-property-modal').classList.add('active');
                 } else {
                     showMessageBox("Lỗi", "Không tìm thấy tin đăng để chỉnh sửa.");
@@ -990,6 +1159,8 @@
         document.getElementById('close-edit-modal').addEventListener('click', () => {
             document.getElementById('edit-property-modal').classList.remove('active');
             document.getElementById('edit-form-message').textContent = ''; // Clear message
+            document.getElementById('edit-image-preview-container').innerHTML = ''; // Clear image previews
+            document.getElementById('edit-images').value = ''; // Clear file input
         });
 
         // Close message box
@@ -1014,19 +1185,40 @@
             formMessage.textContent = 'Đang đăng tin...';
             formMessage.className = 'mt-4 text-center text-blue-600 text-sm';
 
+            const newImagesInput = document.getElementById('new-images');
+            let uploadedImageUrls = [];
+
+            // If new images are selected, upload them first
+            if (newImagesInput.files && newImagesInput.files.length > 0) {
+                const tempPropertyId = doc(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`)).id; // Generate a temporary ID for storage path
+                uploadedImageUrls = await uploadImages(newImagesInput.files, tempPropertyId);
+                if (uploadedImageUrls.length === 0 && newImagesInput.files.length > 0) {
+                    // If files were selected but none uploaded (e.g., due to error), stop submission
+                    formMessage.textContent = 'Lỗi tải ảnh. Vui lòng kiểm tra lại.';
+                    formMessage.className = 'mt-4 text-center text-red-600 text-sm';
+                    return;
+                }
+            }
+
             const newProperty = {
                 title: document.getElementById('new-title').value,
                 price: document.getElementById('new-price').value,
                 district: document.getElementById('new-district').value,
                 type: document.getElementById('new-type').value,
                 area: document.getElementById('new-area').value,
-                details: document.getElementById('new-details').value, // Get 'Chi tiết' value
+                details: document.getElementById('new-details').value, // Still capture details for backward compatibility
                 description: document.getElementById('new-description').value,
                 deposit: document.getElementById('new-deposit').value, // Get 'Tiền cọc' value
+                imageUrls: uploadedImageUrls, // Save uploaded image URLs
                 userId: userId, // Store the user ID with the post
                 timestamp: new Date(), // Add a timestamp
                 source: 'app-created' // Mark as created by the app
             };
+
+            // If no new images were uploaded but a details URL was provided, use that as the primary imageUrl
+            if (newProperty.imageUrls.length === 0 && isValidHttpUrl(newProperty.details)) {
+                newProperty.imageUrls.push(newProperty.details);
+            }
 
             try {
                 // Add to public collection and get the document reference
@@ -1038,6 +1230,7 @@
                 formMessage.textContent = 'Tin đăng đã được đăng thành công!';
                 formMessage.className = 'mt-4 text-center text-green-600 text-sm';
                 document.getElementById('new-property-form').reset(); // Clear the form
+                document.getElementById('new-image-preview-container').innerHTML = ''; // Clear image previews
                 showMessageBox("Thành công", "Tin đăng của bạn đã được đăng thành công!");
                 // Firestore listener will automatically re-render
             } catch (e) {
@@ -1067,17 +1260,39 @@
             editFormMessage.textContent = 'Đang lưu thay đổi...';
             editFormMessage.className = 'mt-4 text-center text-blue-600 text-sm';
 
+            const editImagesInput = document.getElementById('edit-images');
+            let newUploadedImageUrls = [];
+            const existingProperty = allProperties.find(p => p.id === currentEditingPropertyId);
+            let combinedImageUrls = existingProperty ? (existingProperty.imageUrls || []) : [];
+
+            // If new images are selected, upload them and combine with existing
+            if (editImagesInput.files && editImagesInput.files.length > 0) {
+                newUploadedImageUrls = await uploadImages(editImagesInput.files, currentEditingPropertyId);
+                if (newUploadedImageUrls.length === 0 && editImagesInput.files.length > 0) {
+                     editFormMessage.textContent = 'Lỗi tải ảnh mới. Vui lòng kiểm tra lại.';
+                     editFormMessage.className = 'mt-4 text-center text-red-600 text-sm';
+                     return;
+                }
+                combinedImageUrls = [...combinedImageUrls, ...newUploadedImageUrls];
+            }
+
             const updatedProperty = {
                 title: document.getElementById('edit-title').value,
                 price: document.getElementById('edit-price').value,
                 district: document.getElementById('edit-district').value,
                 type: document.getElementById('edit-type').value,
                 area: document.getElementById('edit-area').value,
-                details: document.getElementById('edit-details').value, // Get updated 'Chi tiết' value
+                details: document.getElementById('edit-details').value, // Still capture details for backward compatibility
                 description: document.getElementById('edit-description').value,
                 deposit: document.getElementById('edit-deposit').value, // Get updated 'Tiền cọc' value
+                imageUrls: combinedImageUrls // Save combined image URLs
             };
 
+            // If no new images were uploaded AND imageUrls is empty but a details URL was provided, use that as the primary imageUrl
+            if (updatedProperty.imageUrls.length === 0 && isValidHttpUrl(updatedProperty.details)) {
+                updatedProperty.imageUrls.push(updatedProperty.details);
+            }
+            
             try {
                 // Update in public collection
                 await updateDoc(doc(db, `artifacts/${firebaseConfig.appId}/public/data/properties`, currentEditingPropertyId), updatedProperty); // Use firebaseConfig.appId
@@ -1091,6 +1306,8 @@
                 editFormMessage.textContent = 'Thay đổi đã được lưu thành công!';
                 editFormMessage.className = 'mt-4 text-center text-green-600 text-sm';
                 document.getElementById('edit-property-modal').classList.remove('active'); // Close modal
+                document.getElementById('edit-image-preview-container').innerHTML = ''; // Clear image previews
+                document.getElementById('edit-images').value = ''; // Clear file input
                 showMessageBox("Thành công", "Tin đăng đã được cập nhật thành công!");
                 // Firestore listener will automatically re-render
             } catch (e) {
@@ -1112,6 +1329,9 @@
             // Only allow admin to view post new page
             if (isAdmin) { // Check isAdmin flag
                 showPage('post-new-page');
+                // Clear any old previews when navigating to new post page
+                document.getElementById('new-image-preview-container').innerHTML = '';
+                document.getElementById('new-images').value = '';
             } else {
                 showMessageBox("Truy cập bị từ chối", "Bạn không có quyền truy cập trang này.");
             }
@@ -1163,6 +1383,12 @@
 
         // Event listener for the new sync button
         document.getElementById('sync-google-sheet-button').addEventListener('click', syncGoogleSheetData);
+
+        // Setup image previews for new and edit forms
+        document.addEventListener('DOMContentLoaded', () => {
+            setupImagePreview('new-images', 'new-image-preview-container');
+            setupImagePreview('edit-images', 'edit-image-preview-container');
+        });
 
         // Initialize Firebase when the window loads
         window.onload = initializeFirebase;
