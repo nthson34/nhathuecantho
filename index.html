@@ -571,10 +571,10 @@
             // AND the parsed numeric value is less than a certain threshold (e.g., 1,000,000)
             // then multiply by 1,000,000.
             // This prevents multiplying already large numbers (e.g., "1000000đ") by another million.
-            const isMillionImpliedInOriginal = originalAmountString.includes('tr') || originalAmountString.includes('đ');
+            const isMillionImplied = originalAmountString.includes('tr') || originalAmountString.includes('đ');
             const isSmallNumber = numericValue < 1000000; // Threshold to consider it a "small" number that needs multiplying
 
-            if (isMillionImpliedInOriginal && isSmallNumber) {
+            if (isMillionImplied && isSmallNumber) {
                 numericValue *= 1000000;
             }
 
@@ -840,17 +840,43 @@
                 loadingMessageElement.classList.remove('hidden');
             }
 
-            allProperties = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                timestamp: doc.data().timestamp ? doc.data().timestamp.toDate() : new Date(0) // Convert Firestore Timestamp to Date object
-            }));
+            allProperties = snapshot.docs.map(doc => {
+                const data = doc.data();
+                let numericPrice = 0; // Default for "Giá liên hệ" or invalid prices
 
-            // Sort by timestamp (newest first)
+                if (typeof data.price === 'string') {
+                    let cleanedPrice = data.price.toLowerCase().trim().replace(/đ/g, '').replace(/,/g, '.');
+                    let tempNumericValue = parseFloat(cleanedPrice);
+
+                    if (!isNaN(tempNumericValue)) {
+                        const isMillionImplied = data.price.toLowerCase().includes('tr');
+                        if (isMillionImplied && tempNumericValue < 1000000) { // Heuristic: if 'tr' is present and value is small
+                            numericPrice = tempNumericValue * 1000000;
+                        } else {
+                            numericPrice = tempNumericValue;
+                        }
+                    }
+                } else if (typeof data.price === 'number') {
+                    numericPrice = data.price;
+                }
+
+                return {
+                    id: doc.id,
+                    ...data,
+                    timestamp: data.timestamp ? data.timestamp.toDate() : new Date(0),
+                    numericPrice: numericPrice // Store the parsed numeric price for sorting
+                };
+            });
+
+            // Sort by numericPrice (low to high), then by timestamp (newest first)
             allProperties.sort((a, b) => {
+                if (a.numericPrice !== b.numericPrice) {
+                    return a.numericPrice - b.numericPrice; // Sort by price ascending
+                }
+                // If prices are equal, sort by timestamp descending (newest first)
                 const timeA = a.timestamp ? a.timestamp.getTime() : 0;
                 const timeB = b.timestamp ? b.timestamp.getTime() : 0;
-                return timeB - timeA; // Newest first
+                return timeB - timeA;
             });
 
             console.log("DEBUG: Dữ liệu Firestore đã tải và render:", allProperties);
