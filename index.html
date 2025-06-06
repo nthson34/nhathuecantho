@@ -12,8 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
-            font-family: 'Inter', sans-serif; /* Changed font to Inter */
-            background-color: #f0f2f5; /* Màu nền nhẹ nhàng */
+            font-family: 'Inter', sans-serif; /* Màu nền nhẹ nhàng */
+            background-color: #f0f2f5; 
         }
         /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar {
@@ -186,6 +186,26 @@
             border-radius: 8px;
             border: 1px solid #ddd;
         }
+        /* Base styling for the pagination button (only layout related) */
+        .pagination-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px; /* Ensure a minimum width for better touch targets */
+            height: auto; /* Allow height to adjust based on content */
+            text-align: center; /* Center text within the button */
+        }
+        /* Styling for text inside pagination buttons */
+        .main-text {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+        }
+        .sub-text {
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 600; /* font-semibold */
+            margin-top: 0.25rem; /* mt-1 */
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -239,6 +259,24 @@
 
         <!-- Home Page Content -->
         <div id="home-page" class="page-content active">
+            <!-- Pagination Section -->
+            <section class="bg-white p-6 rounded-xl shadow-xl border border-gray-100 mb-8 flex flex-col items-center">
+                <div class="flex flex-wrap justify-center gap-6" id="pagination-container">
+                    <button class="pagination-button px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg bg-blue-600 text-white hover:bg-blue-700 hover:transform hover:-translate-y-1 hover:shadow-xl" data-page="1">
+                        <span class="main-text">Trang 1</span>
+                        <span class="sub-text">Giá dưới 4 triệu</span>
+                    </button>
+                    <button class="pagination-button px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg bg-blue-600 text-white hover:bg-blue-700 hover:transform hover:-translate-y-1 hover:shadow-xl" data-page="2">
+                        <span class="main-text">Trang 2</span>
+                        <span class="sub-text">Giá 4 triệu - dưới 8 triệu</span>
+                    </button>
+                    <button class="pagination-button px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg bg-blue-600 text-white hover:bg-blue-700 hover:transform hover:-translate-y-1 hover:shadow-xl" data-page="3">
+                        <span class="main-text">Trang 3</span>
+                        <span class="sub-text">Giá 8 triệu trở lên</span>
+                    </button>
+                </div>
+            </section>
+
             <!-- Property Listings Section - Enhanced for Chotot style -->
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="property-listings">
                 <!-- Properties will be loaded here by JavaScript -->
@@ -498,6 +536,14 @@
         // (e.g., Firebase Cloud Functions) or use more robust authentication methods.
         const SECRET_ADMIN_CODE = '211092'; // Define your secret admin code here
 
+        // Pagination state
+        let currentPage = 1;
+        const priceRanges = {
+            1: { min: 0, max: 3999999 }, // Giá dưới 4 triệu
+            2: { min: 4000000, max: 7999999 }, // Giá 4 triệu - dưới 8 triệu
+            3: { min: 8000000, max: Infinity } // Giá 8 triệu trở lên
+        };
+
         // Function to show custom message box
         function showMessageBox(title, message) {
             document.getElementById('message-box-title').textContent = title;
@@ -538,19 +584,19 @@
                 postNewPage.classList.add('hidden'); // Hide post new page for non-admin
             }
             // Re-render properties to update edit/delete buttons visibility
-            renderProperties(allProperties);
+            filterAndRenderProperties(); // Re-apply filters after admin status changes
         }
 
-        // Function to format currency
+        // Function to format currency (for display purposes only)
         function formatCurrency(amount) {
-            if (typeof amount !== 'string') {
+            if (typeof amount !== 'string' && typeof amount !== 'number') {
                 amount = String(amount);
             }
 
-            let originalAmountString = amount.toLowerCase().trim();
+            let originalAmountString = String(amount).toLowerCase().trim();
             let numericValue;
 
-            // First, remove 'đ' suffix, 'tr' suffix, and any spaces
+            // Remove 'đ' suffix, 'tr' suffix, and any spaces
             let cleanedAmount = originalAmountString.replace(/đ|tr/g, '').trim();
 
             // Replace comma decimal separator with dot decimal separator
@@ -558,7 +604,6 @@
 
             // Remove thousands separators (dots) before parsing as a number.
             // This regex ensures we only remove dots that are thousands separators, not decimal points.
-            // It replaces a dot if it's followed by exactly three digits and then then optionally more digits or end of string.
             let finalNumericString = cleanedAmount.replace(/\.(?=\d{3}(?:\.|$))/g, ''); 
             
             numericValue = parseFloat(finalNumericString);
@@ -571,7 +616,7 @@
             // AND the parsed numeric value is less than a certain threshold (e.g., 1,000,000)
             // then multiply by 1,000,000.
             // This prevents multiplying already large numbers (e.g., "1000000đ") by another million.
-            const isMillionImplied = originalAmountString.includes('tr') || originalAmountString.includes('đ');
+            const isMillionImplied = originalAmountString.includes('tr') || originalAmountString.includes('đ') || originalAmountString.includes('triệu');
             const isSmallNumber = numericValue < 1000000; // Threshold to consider it a "small" number that needs multiplying
 
             if (isMillionImplied && isSmallNumber) {
@@ -580,6 +625,55 @@
 
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(numericValue);
         }
+
+        // Function to parse and format price for numerical sorting and filtering
+        function formatPriceForSorting(priceString) {
+            if (typeof priceString !== 'string') {
+                return 0; // Treat non-string prices as 0
+            }
+
+            let cleanedPrice = priceString.toLowerCase().trim();
+
+            // Handle "Giá liên hệ" or empty string cases first
+            if (cleanedPrice === 'giá liên hệ' || cleanedPrice === 'thỏa thuận' || cleanedPrice === '') {
+                return 0; // Return 0, which means it will be at the bottom when sorted by price
+            }
+
+            let numericValue;
+            let isMillion = false;
+            let isThousand = false;
+
+            // Check for explicit 'tr', 'trieu', 'nghin', 'nghìn' at the end
+            if (cleanedPrice.endsWith('tr') || cleanedPrice.endsWith('triệu')) {
+                isMillion = true;
+                cleanedPrice = cleanedPrice.replace(/tr|triệu/g, '').trim(); // Remove 'tr' or 'trieu'
+            } else if (cleanedPrice.endsWith('nghin') || cleanedPrice.endsWith('nghìn')) {
+                isThousand = true;
+                cleanedPrice = cleanedPrice.replace(/nghin|nghìn/g, '').trim(); // Remove 'nghin' or 'nghìn'
+            }
+
+            // Remove 'đ', spaces, and replace comma decimal with dot
+            cleanedPrice = cleanedPrice.replace(/đ| /g, '');
+            cleanedPrice = cleanedPrice.replace(/,/g, '.'); // Replace decimal commas with dots
+
+            numericValue = parseFloat(cleanedPrice);
+
+            if (isNaN(numericValue)) {
+                return 0; // If still not a number, treat as 0
+            }
+
+            if (isMillion) {
+                numericValue *= 1000000; // Apply million multiplier
+            } else if (isThousand) {
+                numericValue *= 1000; // Apply thousand multiplier
+            } else if (numericValue < 10000 && (priceString.includes('k') || priceString.includes('K'))) {
+                // Heuristic for 'k' or 'K' implying thousands, e.g., "50k"
+                numericValue *= 1000;
+            }
+
+            return numericValue;
+        }
+
 
         /**
          * Uploads image files to Firebase Storage.
@@ -842,23 +936,8 @@
 
             allProperties = snapshot.docs.map(doc => {
                 const data = doc.data();
-                let numericPrice = 0; // Default for "Giá liên hệ" or invalid prices
-
-                if (typeof data.price === 'string') {
-                    let cleanedPrice = data.price.toLowerCase().trim().replace(/đ/g, '').replace(/,/g, '.');
-                    let tempNumericValue = parseFloat(cleanedPrice);
-
-                    if (!isNaN(tempNumericValue)) {
-                        const isMillionImplied = data.price.toLowerCase().includes('tr');
-                        if (isMillionImplied && tempNumericValue < 1000000) { // Heuristic: if 'tr' is present and value is small
-                            numericPrice = tempNumericValue * 1000000;
-                        } else {
-                            numericPrice = tempNumericValue;
-                        }
-                    }
-                } else if (typeof data.price === 'number') {
-                    numericPrice = data.price;
-                }
+                // Use the new formatPriceForSorting function
+                const numericPrice = formatPriceForSorting(data.price);
 
                 return {
                     id: doc.id,
@@ -880,11 +959,42 @@
             });
 
             console.log("DEBUG: Dữ liệu Firestore đã tải và render:", allProperties);
-            renderProperties(allProperties); // Call the existing render function
+            filterAndRenderProperties(); // Call filter and render after initial load and sort
             if (loadingMessageElement) {
                 loadingMessageElement.classList.add('hidden');
             }
         }
+
+        // Function to filter and render properties based on current filters and pagination
+        function filterAndRenderProperties() {
+            let filteredProperties = [...allProperties]; // Start with all properties
+
+            // Apply keyword search filter
+            const keyword = document.getElementById('header-search-keyword').value.toLowerCase();
+            if (keyword) {
+                filteredProperties = filteredProperties.filter(property => {
+                    const matchesKeyword = (property.title && property.title.toLowerCase().includes(keyword)) ||
+                                           (property.description && property.description.toLowerCase().includes(keyword));
+                    return matchesKeyword;
+                });
+            }
+
+            // Apply price range filter based on current page
+            const currentRange = priceRanges[currentPage];
+            if (currentRange) {
+                filteredProperties = filteredProperties.filter(property => {
+                    const price = property.numericPrice;
+                    // Handle "Giá liên hệ" (numericPrice = 0) to always show on page 1
+                    if (currentPage === 1 && price === 0) {
+                        return true;
+                    }
+                    return price >= currentRange.min && price <= currentRange.max;
+                });
+            }
+
+            renderProperties(filteredProperties);
+        }
+
 
         // Function to validate if a string is a URL
         function isValidHttpUrl(string) {
@@ -995,7 +1105,7 @@
                         reader.onload = (e) => {
                             const img = document.createElement('img');
                             img.src = e.target.result;
-                            img.alt = file.name;
+                            img.alt = "Ảnh xem trước";
                             previewContainer.appendChild(img);
                         };
                         reader.readAsDataURL(file);
@@ -1007,13 +1117,7 @@
         // Search functionality
         document.getElementById('header-search-keyword').addEventListener('keyup', (event) => {
             if (event.key === 'Enter') {
-                const keyword = document.getElementById('header-search-keyword').value.toLowerCase();
-                const filtered = allProperties.filter(property => {
-                    const matchesKeyword = (property.title && property.title.toLowerCase().includes(keyword)) ||
-                                           (property.description && property.description.toLowerCase().includes(keyword));
-                    return matchesKeyword;
-                });
-                renderProperties(filtered);
+                filterAndRenderProperties(); // Re-filter when search keyword changes
             }
         });
 
@@ -1346,6 +1450,7 @@
         document.getElementById('nav-home').addEventListener('click', (e) => {
             e.preventDefault();
             showPage('home-page');
+            filterAndRenderProperties(); // Re-apply filters when navigating to home page
         });
 
         document.getElementById('nav-post-new').addEventListener('click', (e) => {
@@ -1412,6 +1517,28 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupImagePreview('new-images', 'new-image-preview-container');
             setupImagePreview('edit-images', 'edit-image-preview-container');
+
+            // Pagination button click handler
+            document.getElementById('pagination-container').addEventListener('click', (event) => {
+                const targetButton = event.target.closest('.pagination-button');
+                if (targetButton) {
+                    const pageNumber = parseInt(targetButton.dataset.page);
+                    if (pageNumber !== currentPage) {
+                        currentPage = pageNumber;
+                        // Update active button styling
+                        document.querySelectorAll('.pagination-button').forEach(btn => {
+                            btn.classList.remove('active-page', 'bg-blue-800'); // Remove specific active background
+                        });
+                        targetButton.classList.add('active-page', 'bg-blue-800'); // Add specific active background
+                        filterAndRenderProperties(); // Re-filter and render for the new page
+                    }
+                }
+            });
+            // Set initial active page style on page load
+            const initialActiveButton = document.querySelector(`.pagination-button[data-page="${currentPage}"]`);
+            if (initialActiveButton) {
+                initialActiveButton.classList.add('active-page', 'bg-blue-800'); // Add specific active background on load
+            }
         });
 
         // Initialize Firebase when the window loads
