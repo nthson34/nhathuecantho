@@ -192,19 +192,31 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-width: 140px; /* Ensure a minimum width for better touch targets */
+            min-width: 120px; /* Adjusted for mobile */
             height: auto; /* Allow height to adjust based on content */
             text-align: center; /* Center text within the button */
+            padding: 0.75rem 1rem; /* Smaller padding for mobile */
         }
         /* Styling for text inside pagination buttons */
         .main-text {
-            font-size: 1.125rem; /* text-lg */
+            font-size: 1rem; /* text-base for mobile */
             font-weight: 700; /* font-bold */
         }
         .sub-text {
             font-size: 0.75rem; /* text-xs */
             font-weight: 600; /* font-semibold */
             margin-top: 0.25rem; /* mt-1 */
+        }
+
+        /* Desktop adjustments for pagination buttons */
+        @media (min-width: 768px) { /* md breakpoint */
+            .pagination-button {
+                min-width: 140px; /* Original width for desktop */
+                padding: 1rem 1.25rem; /* Original padding for desktop */
+            }
+            .main-text {
+                font-size: 1.125rem; /* text-lg for desktop */
+            }
         }
     </style>
 </head>
@@ -222,14 +234,14 @@
             </div>
         </div>
         <!-- Main Header Bar -->
-        <div class="container mx-auto py-4 px-4 flex flex-col md:flex-row md:justify-between md:items-center">
+        <div class="container mx-auto py-2 md:py-4 px-4 flex flex-col md:flex-row md:justify-between md:items-center">
             <!-- Title/Logo -->
             <div class="flex-shrink-0 mb-4 md:mb-0">
                 <!-- Adjusted font size for mobile (text-2xl) and desktop (md:text-3xl) -->
                 <h1 class="text-2xl md:text-3xl font-extrabold text-blue-700 text-center md:text-left">NHÀ THUÊ CẦN THƠ</h1>
             </div>
             <!-- Right side: Search bar and Admin Login -->
-            <div class="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4 w-full md:w-auto">
+            <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
                 <!-- Search bar -->
                 <div class="relative w-full max-w-full md:max-w-xs">
                     <input type="text" id="header-search-keyword" placeholder="Tìm kiếm nhanh..."
@@ -249,7 +261,7 @@
     </header>
 
     <!-- Main Content Section -->
-    <main class="flex-grow container mx-auto p-4 py-8">
+    <main class="flex-grow container mx-auto p-2 md:p-4 py-8">
         <!-- User ID Display (Hidden as per user request) -->
         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-lg shadow-sm hidden" role="alert">
             <p class="font-bold">ID Người dùng của bạn:</p>
@@ -260,8 +272,8 @@
         <!-- Home Page Content -->
         <div id="home-page" class="page-content active">
             <!-- Pagination Section -->
-            <section class="bg-white p-6 rounded-xl shadow-xl border border-gray-100 mb-8 flex flex-col items-center">
-                <div class="flex flex-wrap justify-center gap-6" id="pagination-container">
+            <section class="bg-white p-4 md:p-6 rounded-xl shadow-xl border border-gray-100 mb-8 flex flex-col items-center">
+                <div class="flex flex-wrap justify-center gap-4 md:gap-6" id="pagination-container">
                     <button class="pagination-button px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg bg-blue-600 text-white hover:bg-blue-700 hover:transform hover:-translate-y-1 hover:shadow-xl" data-page="1">
                         <span class="main-text">Trang 1</span>
                         <span class="sub-text">Giá dưới 4 triệu</span>
@@ -278,7 +290,7 @@
             </section>
 
             <!-- Property Listings Section - Enhanced for Chotot style -->
-            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="property-listings">
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" id="property-listings">
                 <!-- Properties will be loaded here by JavaScript -->
                 <p class="text-center text-gray-600 text-lg col-span-full" id="loading-message">Đang tải tin đăng...</p>
             </section>
@@ -1528,7 +1540,9 @@
                         // Update active button styling
                         document.querySelectorAll('.pagination-button').forEach(btn => {
                             btn.classList.remove('active-page', 'bg-blue-800'); // Remove specific active background
+                            btn.classList.add('bg-blue-600'); // Ensure it reverts to normal blue
                         });
+                        targetButton.classList.remove('bg-blue-600'); // Remove normal blue from active
                         targetButton.classList.add('active-page', 'bg-blue-800'); // Add specific active background
                         filterAndRenderProperties(); // Re-filter and render for the new page
                     }
@@ -1538,6 +1552,7 @@
             const initialActiveButton = document.querySelector(`.pagination-button[data-page="${currentPage}"]`);
             if (initialActiveButton) {
                 initialActiveButton.classList.add('active-page', 'bg-blue-800'); // Add specific active background on load
+                initialActiveButton.classList.remove('bg-blue-600'); // Remove normal blue from active
             }
         });
 
