@@ -280,10 +280,14 @@
                     </button>
                     <button class="pagination-button px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg bg-blue-600 text-white hover:bg-blue-700 hover:transform hover:-translate-y-1 hover:shadow-xl" data-page="2">
                         <span class="main-text">Trang 2</span>
-                        <span class="sub-text">Giá 4 triệu - dưới 8 triệu</span>
+                        <span class="sub-text">Giá 4 triệu - dưới 6 triệu</span>
                     </button>
                     <button class="pagination-button px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg bg-blue-600 text-white hover:bg-blue-700 hover:transform hover:-translate-y-1 hover:shadow-xl" data-page="3">
                         <span class="main-text">Trang 3</span>
+                        <span class="sub-text">Giá 6 triệu - dưới 8 triệu</span>
+                    </button>
+                    <button class="pagination-button px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg bg-blue-600 text-white hover:bg-blue-700 hover:transform hover:-translate-y-1 hover:shadow-xl" data-page="4">
+                        <span class="main-text">Trang 4</span>
                         <span class="sub-text">Giá 8 triệu trở lên</span>
                     </button>
                 </div>
@@ -548,12 +552,13 @@
         // (e.g., Firebase Cloud Functions) or use more robust authentication methods.
         const SECRET_ADMIN_CODE = '211092'; // Define your secret admin code here
 
-        // Pagination state
+        // Pagination state - UPDATED
         let currentPage = 1;
         const priceRanges = {
-            1: { min: 0, max: 3999999 }, // Giá dưới 4 triệu
-            2: { min: 4000000, max: 7999999 }, // Giá 4 triệu - dưới 8 triệu
-            3: { min: 8000000, max: Infinity } // Giá 8 triệu trở lên
+            1: { min: 0, max: 3999999 },         // Giá dưới 4 triệu
+            2: { min: 4000000, max: 5999999 },    // Giá 4 triệu - dưới 6 triệu
+            3: { min: 6000000, max: 7999999 },    // Giá 6 triệu - dưới 8 triệu
+            4: { min: 8000000, max: Infinity }    // Giá 8 triệu trở lên
         };
 
         // Function to show custom message box
