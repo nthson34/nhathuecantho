@@ -293,10 +293,11 @@
                 </div>
             </section>
 
-            <!-- Property Listings Section - Enhanced for Chotot style -->
+            <!-- Property Listings Section -->
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" id="property-listings">
                 <!-- Properties will be loaded here by JavaScript -->
                 <p class="text-center text-gray-600 text-lg col-span-full" id="loading-message">Đang tải tin đăng...</p>
+                <p class="text-center text-gray-600 text-lg col-span-full hidden" id="no-results-message">Không tìm thấy tin đăng nào phù hợp với bộ lọc hiện tại.</p>
             </section>
         </div>
 
@@ -552,7 +553,7 @@
         // (e.g., Firebase Cloud Functions) or use more robust authentication methods.
         const SECRET_ADMIN_CODE = '211092'; // Define your secret admin code here
 
-        // Pagination state - UPDATED
+        // Pagination state
         let currentPage = 1;
         const priceRanges = {
             1: { min: 0, max: 3999999 },         // Giá dưới 4 triệu
@@ -887,6 +888,10 @@
                 auth = getAuth(app);
                 storage = getStorage(app); // Initialize Firebase Storage
 
+                // Set loading message visibility on page load
+                document.getElementById('loading-message').classList.remove('hidden');
+                document.getElementById('no-results-message').classList.add('hidden');
+
                 // Listen for auth state changes
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
@@ -926,9 +931,13 @@
                         const q = query(collection(db, `artifacts/${firebaseConfig.appId}/public/data/properties`)); 
                         unsubscribeFirestore = onSnapshot(q, (snapshot) => {
                             renderAllPropertiesFromFirestore(snapshot);
+                            // Hide loading message once data is available (even if it's empty)
+                            document.getElementById('loading-message').classList.add('hidden');
                         }, (error) => {
                             console.error("Lỗi khi lắng nghe Firestore:", error);
                             showMessageBox("Lỗi Firestore", "Không thể cập nhật tin đăng theo thời gian thực.");
+                            document.getElementById('loading-message').classList.add('hidden'); // Hide on error
+                            document.getElementById('no-results-message').classList.remove('hidden'); // Show no results message
                         });
 
                     } else {
@@ -940,17 +949,13 @@
             } catch (error) {
                 console.error("Lỗi khởi tạo Firebase hoặc xác thực:", error);
                 showMessageBox("Lỗi", "Không thể khởi tạo dịch vụ. Vui lòng thử lại sau.");
+                document.getElementById('loading-message').classList.add('hidden'); // Hide on error
+                document.getElementById('no-results-message').classList.remove('hidden'); // Show no results message
             }
         }
 
         // Function to render all properties from Firestore snapshot
         function renderAllPropertiesFromFirestore(snapshot) {
-            const loadingMessageElement = document.getElementById('loading-message');
-            if (loadingMessageElement) {
-                loadingMessageElement.textContent = "Đang tải tin đăng...";
-                loadingMessageElement.classList.remove('hidden');
-            }
-
             allProperties = snapshot.docs.map(doc => {
                 const data = doc.data();
                 // Use the new formatPriceForSorting function
@@ -977,9 +982,6 @@
 
             console.log("DEBUG: Dữ liệu Firestore đã tải và render:", allProperties);
             filterAndRenderProperties(); // Call filter and render after initial load and sort
-            if (loadingMessageElement) {
-                loadingMessageElement.classList.add('hidden');
-            }
         }
 
         // Function to filter and render properties based on current filters and pagination
@@ -1033,11 +1035,15 @@
         // Function to render properties
         function renderProperties(propertiesToRender) {
             const listingsContainer = document.getElementById('property-listings');
+            const noResultsMessage = document.getElementById('no-results-message');
+
             listingsContainer.innerHTML = ''; // Clear existing listings
+            noResultsMessage.classList.add('hidden'); // Hide no results message initially
+
             console.log("DEBUG: Đang render các tin đăng. Số lượng tin đăng:", propertiesToRender.length);
 
             if (propertiesToRender.length === 0) {
-                listingsContainer.innerHTML = '<p class="text-center text-gray-600 text-lg col-span-full">Không tìm thấy bất động sản nào phù hợp.</p>';
+                noResultsMessage.classList.remove('hidden'); // Show no results message
                 console.log("DEBUG: Không tìm thấy bất động sản nào phù hợp để hiển thị.");
                 return;
             }
