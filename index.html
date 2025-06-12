@@ -296,9 +296,10 @@
             <!-- Property Listings Section -->
             <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" id="property-listings">
                 <!-- Properties will be loaded here by JavaScript -->
-                <p class="text-center text-gray-600 text-lg col-span-full" id="loading-message">Đang tải tin đăng...</p>
-                <p class="text-center text-gray-600 text-lg col-span-full hidden" id="no-results-message">Không tìm thấy tin đăng nào phù hợp với bộ lọc hiện tại.</p>
             </section>
+            <!-- Loading and No Results Messages moved outside property-listings -->
+            <p class="text-center text-gray-600 text-lg col-span-full mt-4" id="loading-message">Đang tải tin đăng...</p>
+            <p class="text-center text-gray-600 text-lg col-span-full hidden mt-4" id="no-results-message">Không tìm thấy tin đăng nào phù hợp với bộ lọc hiện tại.</p>
         </div>
 
         <!-- Post New Page Content (hidden by default, shown only for admin) -->
@@ -937,7 +938,7 @@
                             console.error("Lỗi khi lắng nghe Firestore:", error);
                             showMessageBox("Lỗi Firestore", "Không thể cập nhật tin đăng theo thời gian thực.");
                             document.getElementById('loading-message').classList.add('hidden'); // Hide on error
-                            document.getElementById('no-results-message').classList.remove('hidden'); // Show no results message
+                            // The 'no-results-message' is now handled by renderProperties based on search keyword
                         });
 
                     } else {
@@ -950,7 +951,7 @@
                 console.error("Lỗi khởi tạo Firebase hoặc xác thực:", error);
                 showMessageBox("Lỗi", "Không thể khởi tạo dịch vụ. Vui lòng thử lại sau.");
                 document.getElementById('loading-message').classList.add('hidden'); // Hide on error
-                document.getElementById('no-results-message').classList.remove('hidden'); // Show no results message
+                // The 'no-results-message' is now handled by renderProperties based on search keyword
             }
         }
 
@@ -1036,6 +1037,7 @@
         function renderProperties(propertiesToRender) {
             const listingsContainer = document.getElementById('property-listings');
             const noResultsMessage = document.getElementById('no-results-message');
+            const searchKeyword = document.getElementById('header-search-keyword').value.toLowerCase(); // Get the current search keyword
 
             listingsContainer.innerHTML = ''; // Clear existing listings
             noResultsMessage.classList.add('hidden'); // Hide no results message initially
@@ -1043,8 +1045,15 @@
             console.log("DEBUG: Đang render các tin đăng. Số lượng tin đăng:", propertiesToRender.length);
 
             if (propertiesToRender.length === 0) {
-                noResultsMessage.classList.remove('hidden'); // Show no results message
-                console.log("DEBUG: Không tìm thấy bất động sản nào phù hợp để hiển thị.");
+                // Only show "no results message" if a search keyword was entered
+                if (searchKeyword) {
+                    noResultsMessage.classList.remove('hidden'); // Show no results message
+                    console.log("DEBUG: Không tìm thấy bất động sản nào phù hợp để hiển thị với từ khóa tìm kiếm.");
+                } else {
+                    // If no properties and no search keyword, it means initial data is empty or filtered by pagination to an empty result.
+                    // The 'Đang tải tin đăng...' message would already be hidden by initializeFirebase or onSnapshot callback.
+                    console.log("DEBUG: Không có tin đăng nào cho trang này hoặc bộ lọc hiện tại (không tìm kiếm).");
+                }
                 return;
             }
 
@@ -1354,7 +1363,7 @@
             const newProperty = {
                 title: document.getElementById('new-title').value,
                 price: document.getElementById('new-price').value,
-                district: document.getElementById('new-district').value,
+                district: document.getElementById('new-district').value, // Corrected from .Ễ value
                 type: document.getElementById('new-type').value,
                 area: document.getElementById('new-area').value,
                 details: document.getElementById('new-details').value, // Still capture details for backward compatibility
